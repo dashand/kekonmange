@@ -8,7 +8,6 @@ import WheelOfFortune from "@/components/WheelOfFortune";
 import RestaurantEditDialog from "@/components/RestaurantEditDialog";
 import WorkplaceSelector from "@/components/WorkplaceSelector";
 import DataTransferPanel from "@/components/DataTransferPanel";
-import PlaceSearch, { PlaceResult } from "@/components/PlaceSearch";
 import { 
   Restaurant, 
   FilterOptions, 
@@ -20,7 +19,7 @@ import {
   getRandomColor
 } from "@/types/restaurant";
 import { v4 as uuidv4 } from "uuid";
-import { ChevronUp, Plus, Share2, FilterX, SlidersHorizontal, Search } from "lucide-react";
+import { ChevronUp, Plus, Share2, FilterX, SlidersHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -108,9 +107,6 @@ const Index = () => {
   
   // State pour contrôler la visibilité du panneau de partage
   const [isDataTransferOpen, setIsDataTransferOpen] = useState(false);
-  
-  // State pour contrôler la visibilité du moteur de recherche
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
   
   // Récupérer uniquement les restaurants du lieu de travail actif
   const activeWorkplaceRestaurants = activeWorkplace 
@@ -293,79 +289,6 @@ const Index = () => {
     toast.info("Filtres réinitialisés");
   };
   
-  const handleSelectPlace = (place: PlaceResult) => {
-    // Conversion des horaires d'ouverture de l'API Google vers notre format
-    const openingHours = place.opening_hours?.periods?.map(period => {
-      // Convertir le format horaire de HHMM à HH:MM
-      const formatTimeString = (timeStr: string): string => {
-        return `${timeStr.substring(0, 2)}:${timeStr.substring(2, 4)}`;
-      };
-      
-      // Créer le service de midi ou du soir selon l'heure
-      const openHour = parseInt(period.open.time.substring(0, 2));
-      const closeHour = parseInt(period.close.time.substring(0, 2));
-      
-      return {
-        dayOfWeek: period.open.day as any,
-        closed: false,
-        // Si ouvert avant 15h, c'est le service midi
-        ...(openHour < 15 ? {
-          lunchService: {
-            opens: formatTimeString(period.open.time),
-            closes: formatTimeString(period.close.time)
-          }
-        } : {}),
-        // Si ouvert après 15h, c'est le service du soir
-        ...(openHour >= 15 ? {
-          dinnerService: {
-            opens: formatTimeString(period.open.time),
-            closes: formatTimeString(period.close.time)
-          }
-        } : {})
-      };
-    });
-    
-    // Convertir le niveau de prix de Google (0-4) en notre format (€-€€€€)
-    const convertPriceLevel = (level?: number): "€" | "€€" | "€€€" | "€€€€" => {
-      if (level === undefined) return "€";
-      switch(level) {
-        case 0: return "€";
-        case 1: return "€";
-        case 2: return "€€";
-        case 3: return "€€€";
-        case 4: return "€€€€";
-        default: return "€";
-      }
-    };
-    
-    const newRestaurant: Restaurant = {
-      id: uuidv4(),
-      name: place.name,
-      address: place.formatted_address || place.vicinity,
-      foodType: "autre",
-      color: getRandomColor(),
-      distance: 0,
-      takeaway: place.takeout || false,
-      vegetarianOption: place.vegetarian || false,
-      halalOption: place.halal || false,
-      restaurantTickets: "none",
-      priceRange: convertPriceLevel(place.price_level),
-      reservationType: "notAvailable",
-      phoneOrderAllowed: false,
-      spicyLevel: "none",
-      workplaceId: activeWorkplace?.id || "",
-      phoneNumber: place.formatted_phone_number || place.international_phone_number || "",
-      location: {
-        lat: place.geometry.location.lat,
-        lng: place.geometry.location.lng
-      },
-      openingHours: openingHours
-    };
-
-    setRestaurants([...restaurants, newRestaurant]);
-    setIsSearchOpen(false);
-    toast.success(`${place.name} a été ajouté à votre liste`);
-  };
 
   useEffect(() => {
     const checkScroll = () => {
@@ -409,15 +332,6 @@ const Index = () => {
         )}
         
         <div className="fixed top-4 right-4 z-40 flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setIsSearchOpen(true)}
-            className="text-gray-500 hover:text-gray-700 flex items-center gap-1 text-xs"
-          >
-            <Search className="h-3.5 w-3.5" />
-            Rechercher
-          </Button>
           <Button
             variant="ghost"
             size="sm"
@@ -569,29 +483,6 @@ const Index = () => {
               onImport={handleImportData}
               asDialog={true}
             />
-          </DialogContent>
-        </Dialog>
-
-        <Dialog open={isSearchOpen} onOpenChange={setIsSearchOpen}>
-          <DialogContent className="sm:max-w-[600px]">
-            <DialogHeader>
-              <DialogTitle>Rechercher un restaurant</DialogTitle>
-              <DialogDescription>
-                Recherchez un restaurant à proximité pour l'ajouter à votre liste.
-              </DialogDescription>
-            </DialogHeader>
-            {activeWorkplace ? (
-              <PlaceSearch
-                workplace={activeWorkplace}
-                onSelectPlace={handleSelectPlace}
-              />
-            ) : (
-              <div className="text-center py-8 border border-dashed rounded-lg bg-card">
-                <p className="text-muted-foreground">
-                  Veuillez d'abord ajouter un lieu de travail pour rechercher des restaurants.
-                </p>
-              </div>
-            )}
           </DialogContent>
         </Dialog>
 

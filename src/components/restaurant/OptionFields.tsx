@@ -43,7 +43,7 @@ const OptionFields: React.FC<OptionFieldsProps> = ({ form }) => {
           control={form.control}
           name="phoneOrderAllowed"
           render={({ field }) => (
-            <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+            <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-xl border border-gray-100 p-4 hover:border-orange-200 transition-colors">
               <FormControl>
                 <Checkbox
                   checked={field.value}
@@ -66,7 +66,7 @@ const OptionFields: React.FC<OptionFieldsProps> = ({ form }) => {
           control={form.control}
           name="takeaway"
           render={({ field }) => (
-            <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+            <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-xl border border-gray-100 p-4 hover:border-orange-200 transition-colors">
               <FormControl>
                 <Checkbox
                   checked={field.value}
@@ -84,7 +84,7 @@ const OptionFields: React.FC<OptionFieldsProps> = ({ form }) => {
           control={form.control}
           name="vegetarianOption"
           render={({ field }) => (
-            <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+            <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-xl border border-gray-100 p-4 hover:border-orange-200 transition-colors">
               <FormControl>
                 <Checkbox
                   checked={field.value}
@@ -102,7 +102,7 @@ const OptionFields: React.FC<OptionFieldsProps> = ({ form }) => {
           control={form.control}
           name="halalOption"
           render={({ field }) => (
-            <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+            <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-xl border border-gray-100 p-4 hover:border-orange-200 transition-colors">
               <FormControl>
                 <Checkbox
                   checked={field.value}

@@ -1,18 +1,19 @@
-
 import React from "react";
 import { Utensils } from "lucide-react";
 
 const Header: React.FC = () => {
   return (
-    <header className="w-full py-6 px-4 flex flex-col items-center justify-center animate-fade-in">
-      <div className="flex items-center gap-3 mb-2">
-        <div className="p-2 rounded-full bg-primary/10 text-primary">
-          <Utensils className="h-6 w-6" />
+    <header className="w-full py-10 px-4 flex flex-col items-center justify-center animate-fade-in">
+      <div className="flex items-center gap-3 mb-3">
+        <div className="p-3 rounded-2xl bg-orange-50 text-orange-500">
+          <Utensils className="h-7 w-7" />
         </div>
-        <h1 className="text-3xl font-bold tracking-tight">KekonMange</h1>
+        <h1 className="text-4xl font-extrabold tracking-tight text-gray-900">
+          Kekon<span className="text-orange-500">Mange</span>
+        </h1>
       </div>
-      <p className="text-muted-foreground text-center max-w-lg text-balance">
-        Enregistrez vos restaurants préférés et laissez la chance décider où vous allez manger aujourd'hui
+      <p className="text-gray-400 text-center max-w-md text-sm">
+        Enregistrez vos restaurants favoris et laissez le hasard choisir pour vous.
       </p>
     </header>
   );

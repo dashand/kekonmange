@@ -71,24 +71,24 @@ const PromotionEditor: React.FC<PromotionEditorProps> = ({ promotions, onChange 
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-base flex items-center gap-2">
+    <div>
+      <div>
+        <h4 className="text-sm font-semibold flex items-center gap-2 text-gray-700">
           <Percent className="h-4 w-4" />
           Promotions
-        </CardTitle>
-        <CardDescription>
+        </h4>
+        <p className="text-xs text-gray-400">
           Ajoutez des promotions ou réductions pour ce restaurant
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
+        </p>
+      </div>
+      <div className="space-y-4 mt-3">
         <div className="space-y-2">
           {promotions.length > 0 ? (
             <div className="space-y-2">
               {promotions.map((promo) => (
                 <div 
                   key={promo.id} 
-                  className="flex items-start justify-between p-3 rounded-md border bg-background"
+                  className="flex items-start justify-between p-3 rounded-xl border border-gray-100 bg-gray-50"
                 >
                   <div>
                     <p className="font-medium">{promo.description}</p>
@@ -118,7 +118,7 @@ const PromotionEditor: React.FC<PromotionEditorProps> = ({ promotions, onChange 
               ))}
             </div>
           ) : (
-            <div className="text-center p-4 border border-dashed rounded-md">
+            <div className="text-center p-4 border border-dashed border-gray-200 rounded-xl bg-gray-50">
               <p className="text-muted-foreground">
                 Aucune promotion définie pour ce restaurant
               </p>
@@ -168,8 +168,8 @@ const PromotionEditor: React.FC<PromotionEditorProps> = ({ promotions, onChange 
             </Select>
           </div>
         </div>
-      </CardContent>
-      <CardFooter>
+      </div>
+      <div className="mt-3">
         <Button
           type="button"
           variant="outline"
@@ -179,8 +179,8 @@ const PromotionEditor: React.FC<PromotionEditorProps> = ({ promotions, onChange 
           <Plus className="h-4 w-4" />
           Ajouter la promotion
         </Button>
-      </CardFooter>
-    </Card>
+      </div>
+    </div>
   );
 };
 

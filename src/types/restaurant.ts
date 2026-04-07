@@ -102,6 +102,7 @@ export interface FilterOptions {
   spicyLevel: SpicyLevel[];
   openOnDay?: DayOfWeek | null;
   openAtTime?: string | null; // format "HH:MM"
+  incompleteOnly?: boolean | null; 
 }
 
 export interface SavedFilter {
@@ -126,6 +127,7 @@ export const defaultFilters: FilterOptions = {
   spicyLevel: [],
   openOnDay: null,
   openAtTime: null,
+  incompleteOnly: null,
 };
 
 export const getRandomColor = (): string => {
@@ -222,6 +224,13 @@ export const defaultSavedFilters: SavedFilter[] = [
     name: "Petit budget",
     emoji: "💰",
     filter: { ...defaultFilters, priceRange: ["€"] }
+  },
+  {
+    id: "incomplete",
+    name: "À compléter",
+    emoji: "📝",
+    filter: { ...defaultFilters, incompleteOnly: true },
+    isDefault: true
   }
 ];
 
@@ -239,6 +248,36 @@ export const filterMatchesSaved = (current: FilterOptions, saved: FilterOptions)
     current.hasCurrentPromotion === saved.hasCurrentPromotion &&
     JSON.stringify(current.spicyLevel.sort()) === JSON.stringify(saved.spicyLevel.sort()) &&
     current.openOnDay === saved.openOnDay &&
-    current.openAtTime === saved.openAtTime
+    current.openAtTime === saved.openAtTime &&
+    current.incompleteOnly === saved.incompleteOnly
   );
+};
+
+export interface CompletenessResult {
+  score: number; // 0-100
+  filled: number;
+  total: number;
+  missing: string[];
+}
+
+export const getCompletenessScore = (restaurant: Restaurant): CompletenessResult => {
+  const checks: { label: string; filled: boolean }[] = [
+    { label: "Nom", filled: !!restaurant.name },
+    { label: "Type de cuisine", filled: !!restaurant.foodType && restaurant.foodType !== "autre" },
+    { label: "Adresse", filled: !!restaurant.address },
+    { label: "Distance", filled: restaurant.distance > 0 },
+    { label: "Fourchette de prix", filled: !!restaurant.priceRange },
+    { label: "Téléphone", filled: !!restaurant.phoneNumber },
+    { label: "Horaires d'ouverture", filled: !!restaurant.openingHours && restaurant.openingHours.length > 0 },
+    { label: "Options (emporter/veggie/halal)", filled: restaurant.takeaway || restaurant.vegetarianOption || restaurant.halalOption },
+    { label: "Infos menu", filled: !!restaurant.menuInfo },
+    { label: "Photos", filled: !!restaurant.menuPhotos && restaurant.menuPhotos.length > 0 },
+  ];
+
+  const filled = checks.filter(c => c.filled).length;
+  const total = checks.length;
+  const missing = checks.filter(c => !c.filled).map(c => c.label);
+  const score = Math.round((filled / total) * 100);
+
+  return { score, filled, total, missing };
 };

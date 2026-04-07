@@ -1,69 +1,72 @@
-# Welcome to your Lovable project
+# 🍴 KekonMange
 
-## Project info
+Application web collaborative pour gérer vos restaurants favoris autour du bureau et laisser le hasard choisir pour vous.
 
-**URL**: https://lovable.dev/projects/3d65bec4-85b5-43be-ba94-78fd827aa606
+## Fonctionnalités
 
-## How can I edit this code?
+- **Machine à restaurant** — Roulette aléatoire parmi vos restaurants filtrés
+- **Fiches restaurant** — Nom, cuisine, distance, prix, horaires, promotions, photos
+- **Score de complétude** — Indicateur visuel des informations manquantes
+- **Filtres avancés** — Par type de cuisine, distance, prix, options (végétarien, halal, à emporter...)
+- **Filtres favoris** — Sauvegarde de combinaisons de filtres personnalisées (localStorage)
+- **Lieux de travail** — Gestion de plusieurs bureaux avec restaurants associés
+- **Collaboratif** — Données partagées en temps réel entre tous les utilisateurs (PocketBase)
+- **Pas d'authentification** — Style wiki, ouvert à tous
 
-There are several ways of editing your application.
+## Stack technique
 
-**Use Lovable**
+| Couche | Technologie |
+|--------|------------|
+| Frontend | React 18, TypeScript, Vite, Tailwind CSS, shadcn/ui |
+| Backend | PocketBase 0.25 (SQLite, API REST, temps réel SSE) |
+| Serveur web | Caddy (reverse proxy + fichiers statiques) |
+| Hébergement | LXC Debian 12 sur Proxmox |
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/3d65bec4-85b5-43be-ba94-78fd827aa606) and start prompting.
+## Installation
 
-Changes made via Lovable will be committed automatically to this repo.
+### Prérequis
 
-**Use your preferred IDE**
+- Node.js 18+
+- PocketBase 0.25+
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### Développement local
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+```bash
+git clone git@github.com:dashand/kekonmange.git
+cd kekonmange
+npm install
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+### Production
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+```bash
+npm run build
+# Servir le dossier dist/ avec un serveur web
+# Configurer PocketBase sur /api/*
+```
 
-**Use GitHub Codespaces**
+### Collections PocketBase
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+L'application nécessite deux collections :
 
-## What technologies are used for this project?
+**workplaces**
+- `name` (text)
+- `address` (text)
+- `isActive` (bool)
 
-This project is built with .
+**restaurants**
+- `name` (text), `foodType` (text), `color` (text)
+- `address` (text), `menuInfo` (text), `menuPhotos` (json)
+- `takeaway` (bool), `vegetarianOption` (bool), `halalOption` (bool)
+- `distance` (number), `priceRange` (text), `spicyLevel` (text)
+- `restaurantTickets` (text), `reservationType` (text)
+- `phoneOrderAllowed` (bool), `phoneNumber` (text)
+- `promotions` (json), `openingHours` (json), `location` (json)
+- `workplace` (relation vers workplaces)
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+Les deux collections doivent avoir les règles d'accès API ouvertes (list, view, create, update, delete).
 
-## How can I deploy this project?
+## Licence
 
-Simply open [Lovable](https://lovable.dev/projects/3d65bec4-85b5-43be-ba94-78fd827aa606) and click on Share -> Publish.
-
-## I want to use a custom domain - is that possible?
-
-We don't support custom domains (yet). If you want to deploy your project under your own domain then we recommend using Netlify. Visit our docs for more details: [Custom domains](https://docs.lovable.dev/tips-tricks/custom-domain/)
+[MIT](LICENSE)

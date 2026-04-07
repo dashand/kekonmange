@@ -16,6 +16,8 @@ import OpeningHoursEditor from "@/components/OpeningHoursEditor";
 import BasicInfoFields from "@/components/restaurant/BasicInfoFields";
 import OptionFields from "@/components/restaurant/OptionFields";
 import PromotionEditor from "@/components/restaurant/PromotionEditor";
+import OsmAutocomplete from "@/components/OsmAutocomplete";
+import type { OsmRestaurant } from "@/services/osm";
 
 interface RestaurantFormProps {
   onAdd: (restaurant: Restaurant) => void;
@@ -77,6 +79,32 @@ const RestaurantForm: React.FC<RestaurantFormProps> = ({ onAdd, activeWorkplace 
   const [promotions, setPromotions] = useState<Promotion[]>([]);
   const [openingHours, setOpeningHours] = useState<OpeningHours[]>([]);
   
+  const mapOsmCuisine = (cuisine?: string): string => {
+    if (!cuisine) return "autre";
+    const c = cuisine.toLowerCase().split(";")[0].trim();
+    const map: Record<string, string> = {
+      french: "français", italian: "italien", pizza: "italien",
+      japanese: "japonais", sushi: "japonais", chinese: "chinois",
+      indian: "indien", mexican: "mexicain", lebanese: "libanais",
+      burger: "fast-food", kebab: "fast-food", sandwich: "fast-food",
+    };
+    for (const [key, val] of Object.entries(map)) {
+      if (c.includes(key)) return val;
+    }
+    return "autre";
+  };
+
+  const handleOsmSelect = (osm: OsmRestaurant) => {
+    form.setValue("name", osm.name);
+    form.setValue("foodType", mapOsmCuisine(osm.cuisine));
+    if (osm.address) form.setValue("address", osm.address);
+    if (osm.phone) form.setValue("phoneNumber", osm.phone);
+    if (osm.distance) form.setValue("distance", Math.min(Math.max(Math.round(osm.distance / 50) * 50, 50), 5000));
+    if (osm.vegetarian) form.setValue("vegetarianOption", true);
+    if (osm.halal) form.setValue("halalOption", true);
+    if (osm.takeaway) form.setValue("takeaway", true);
+  };
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -109,6 +137,24 @@ const RestaurantForm: React.FC<RestaurantFormProps> = ({ onAdd, activeWorkplace 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        {/* Recherche OSM */}
+        <div className="rounded-2xl border border-orange-100 bg-orange-50/30 p-4">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="p-2 rounded-xl bg-orange-50 text-orange-500">
+              <UtensilsCrossed className="h-4 w-4" />
+            </div>
+            <div>
+              <p className="font-semibold text-sm text-gray-800">Recherche rapide</p>
+              <p className="text-xs text-gray-400">Trouvez un restaurant à proximité pour pré-remplir la fiche</p>
+            </div>
+          </div>
+          <OsmAutocomplete
+            workplaceId={activeWorkplace.id}
+            workplaceAddress={activeWorkplace.address}
+            onSelect={handleOsmSelect}
+          />
+        </div>
+
         {/* Section principale - toujours visible */}
         <div className="rounded-2xl border border-gray-100 bg-white p-4 space-y-4">
           <div className="flex items-center gap-3 mb-2">

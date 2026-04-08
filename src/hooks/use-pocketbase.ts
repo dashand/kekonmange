@@ -64,7 +64,6 @@ export function usePocketBase() {
         setWorkplaces(prev => prev.map(w => ({ ...w, isActive: false })));
       }
       const created = await createWorkplace(wp);
-      setWorkplaces(prev => [...prev, created]);
       return created;
     } catch (err) {
       toast.error('Erreur lors de l\'ajout du lieu');
@@ -85,8 +84,7 @@ export function usePocketBase() {
 
   const editWorkplace = async (wp: Workplace) => {
     try {
-      const updated = await updateWorkplace(wp.id, { name: wp.name, address: wp.address });
-      setWorkplaces(prev => prev.map(w => w.id === wp.id ? { ...w, ...updated } : w));
+      await updateWorkplace(wp.id, { name: wp.name, address: wp.address });
     } catch (err) {
       toast.error('Erreur lors de la modification du lieu');
     }
@@ -96,8 +94,6 @@ export function usePocketBase() {
     try {
       await deleteRestaurantsByWorkplace(id);
       await apiDeleteWorkplace(id);
-      setRestaurants(prev => prev.filter(r => r.workplaceId !== id));
-      setWorkplaces(prev => prev.filter(w => w.id !== id));
     } catch (err) {
       toast.error('Erreur lors de la suppression du lieu');
     }
@@ -108,7 +104,6 @@ export function usePocketBase() {
     try {
       const { id, ...data } = r as any;
       const created = await createRestaurant(data);
-      setRestaurants(prev => [...prev, created]);
       return created;
     } catch (err) {
       toast.error('Erreur lors de l\'ajout du restaurant');
@@ -118,8 +113,7 @@ export function usePocketBase() {
 
   const editRestaurant = async (r: Restaurant) => {
     try {
-      const updated = await updateRestaurant(r.id, r);
-      setRestaurants(prev => prev.map(rest => rest.id === r.id ? updated : rest));
+      await updateRestaurant(r.id, r);
     } catch (err) {
       toast.error('Erreur lors de la modification du restaurant');
     }
@@ -128,7 +122,6 @@ export function usePocketBase() {
   const removeRestaurant = async (id: string) => {
     try {
       await apiDeleteRestaurant(id);
-      setRestaurants(prev => prev.filter(r => r.id !== id));
     } catch (err) {
       toast.error('Erreur lors de la suppression du restaurant');
     }

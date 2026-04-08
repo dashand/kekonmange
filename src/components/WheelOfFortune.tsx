@@ -1,53 +1,73 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useMemo } from "react";
 import { Restaurant } from "@/types/restaurant";
 import { Button } from "@/components/ui/button";
-import { MapPin, ShoppingBag, Clock, Utensils, Percent, Flame, Play } from "lucide-react";
+import { MapPin, Clock, Utensils, Play } from "lucide-react";
 import { toast } from "sonner";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { getSpicyLevelLabel } from "@/types/restaurant";
 import OpeningHoursBadge from "@/components/OpeningHoursBadge";
+import OsmMiniMap from "@/components/OsmMiniMap";
 
 interface WheelOfFortuneProps {
   restaurants: Restaurant[];
   officeAddress?: string;
 }
 
+const ITEM_HEIGHT = 64;
+const VISIBLE_ITEMS = 3;
+const SPIN_DURATION = 3000;
+const REEL_REPEATS = 30;
+
 const WheelOfFortune: React.FC<WheelOfFortuneProps> = ({ restaurants, officeAddress }) => {
   const [spinning, setSpinning] = useState(false);
   const [winner, setWinner] = useState<Restaurant | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const slotMachineRef = useRef<HTMLDivElement>(null);
+  const reelRef = useRef<HTMLDivElement>(null);
+
+  // Pre-build a long reel (stable, only changes when restaurants change)
+  const reel = useMemo(() => {
+    if (restaurants.length === 0) return [];
+    const items: Restaurant[] = [];
+    for (let i = 0; i < REEL_REPEATS; i++) {
+      items.push(...restaurants);
+    }
+    return items;
+  }, [restaurants]);
 
   const spinWheel = () => {
     if (restaurants.length === 0) {
       toast.error("Ajoutez au moins un restaurant pour lancer la machine");
       return;
     }
-    if (spinning) return;
-    
-    setWinner(null);
+    if (spinning || !reelRef.current) return;
+
     setSpinning(true);
-    
-    const randomIndex = Math.floor(Math.random() * restaurants.length);
-    const selectedRestaurant = restaurants[randomIndex];
-    
-    if (slotMachineRef.current) {
-      slotMachineRef.current.classList.remove("animate-spin-slot");
-      void slotMachineRef.current.offsetWidth;
-      slotMachineRef.current.classList.add("animate-spin-slot");
-    }
-    
+    setWinner(null);
+
+    const selectedIndex = Math.floor(Math.random() * restaurants.length);
+    const selectedRestaurant = restaurants[selectedIndex];
+
+    // Pick a target position far into the reel (not at the very end to leave margin)
+    const targetRepeat = REEL_REPEATS - 3;
+    const targetIdx = targetRepeat * restaurants.length + selectedIndex;
+    const centerOffset = Math.floor(VISIBLE_ITEMS / 2);
+    const targetPx = (targetIdx - centerOffset) * ITEM_HEIGHT;
+
+    const el = reelRef.current;
+    // Reset instantly
+    el.style.transition = "none";
+    el.style.transform = "translateY(0px)";
+    void el.offsetHeight; // force reflow
+
+    // Animate
+    el.style.transition = `transform ${SPIN_DURATION}ms cubic-bezier(0.1, 0.7, 0.3, 1)`;
+    el.style.transform = `translateY(-${targetPx}px)`;
+
     setTimeout(() => {
       setWinner(selectedRestaurant);
       setDialogOpen(true);
       setSpinning(false);
-    }, 3000);
+    }, SPIN_DURATION + 300);
   };
 
   if (restaurants.length === 0) {
@@ -64,49 +84,54 @@ const WheelOfFortune: React.FC<WheelOfFortuneProps> = ({ restaurants, officeAddr
   return (
     <>
       <div className="w-full max-w-[480px] mx-auto relative animate-fade-in">
-        <div className="p-6 bg-white rounded-3xl shadow-sm border border-gray-100 shadow-md">
+        <div className="p-6 bg-white rounded-3xl border border-gray-100 shadow-md">
           <div className="mb-5 text-center">
             <p className="text-xs font-semibold tracking-widest uppercase text-orange-500 mb-1">Machine à restaurant</p>
             <h2 className="text-lg font-bold text-gray-800">Où mange-t-on aujourd'hui ?</h2>
           </div>
-          
-          <div className="bg-gray-50 overflow-hidden rounded-2xl border border-gray-100 relative">
-            <div 
-              ref={slotMachineRef}
-              className="p-2"
-            >
-              {restaurants.map((restaurant, index) => (
-                <div 
-                  key={restaurant.id}
-                  className="p-3.5 my-1.5 rounded-xl bg-white border border-gray-100"
+
+          <div
+            className="relative rounded-2xl border border-gray-100 bg-gray-50"
+            style={{ height: VISIBLE_ITEMS * ITEM_HEIGHT, overflow: "hidden" }}
+          >
+            <div ref={reelRef}>
+              {reel.map((restaurant, index) => (
+                <div
+                  key={`reel-${index}`}
+                  className="flex items-center px-3 mx-1 rounded-xl bg-white border border-gray-100"
+                  style={{ height: ITEM_HEIGHT - 8, marginTop: 4, marginBottom: 4 }}
                 >
-                  <div className="flex items-center">
-                    <div 
-                      className="w-10 h-10 rounded-xl flex items-center justify-center mr-3 text-white font-semibold text-sm"
-                      style={{ backgroundColor: restaurant.color || FOOD_COLORS[index % FOOD_COLORS.length] }}
-                    >
-                      {restaurant.name.charAt(0)}
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-gray-800 text-sm">{restaurant.name}</h3>
-                      <p className="text-xs text-gray-400">{restaurant.foodType}</p>
-                    </div>
+                  <div
+                    className="w-9 h-9 rounded-lg flex items-center justify-center mr-3 text-white font-semibold text-sm shrink-0"
+                    style={{ backgroundColor: restaurant.color || FOOD_COLORS[index % FOOD_COLORS.length] }}
+                  >
+                    {restaurant.name.charAt(0)}
+                  </div>
+                  <div className="min-w-0">
+                    <h3 className="font-semibold text-gray-800 text-sm truncate">{restaurant.name}</h3>
+                    <p className="text-xs text-gray-400 truncate">{restaurant.foodType}</p>
                   </div>
                 </div>
               ))}
             </div>
-            
-            <div className="absolute inset-x-0 top-0 h-12 bg-gradient-to-b from-gray-50 to-transparent pointer-events-none z-10"></div>
-            <div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-gray-50 to-transparent pointer-events-none z-10"></div>
-            <div className="absolute inset-0 border-y-2 border-orange-400/60 pointer-events-none top-1/2 transform -translate-y-1/2"></div>
+
+            {/* Gradients */}
+            <div className="absolute inset-x-0 top-0 h-14 bg-gradient-to-b from-gray-50 to-transparent pointer-events-none z-10" />
+            <div className="absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-gray-50 to-transparent pointer-events-none z-10" />
+
+            {/* Selection indicator */}
+            <div
+              className="absolute inset-x-2 pointer-events-none z-20 border-2 border-orange-400 rounded-xl"
+              style={{ top: Math.floor(VISIBLE_ITEMS / 2) * ITEM_HEIGHT, height: ITEM_HEIGHT }}
+            />
           </div>
-          
-          <div className="mt-5 flex justify-center">
+
+          <div className="mt-5">
             <Button
               disabled={spinning}
               onClick={spinWheel}
-              className={"w-full py-6 rounded-2xl text-base font-semibold transition-all " + (spinning 
-                ? "bg-gray-100 text-gray-400 cursor-not-allowed" 
+              className={"w-full py-6 rounded-2xl text-base font-semibold transition-all " + (spinning
+                ? "bg-gray-100 text-gray-400 cursor-not-allowed"
                 : "bg-orange-500 hover:bg-orange-600 text-white shadow-lg shadow-orange-500/20 active:scale-[0.98]"
               )}
             >
@@ -125,15 +150,15 @@ const WheelOfFortune: React.FC<WheelOfFortuneProps> = ({ restaurants, officeAddr
           </div>
         </div>
       </div>
-      
+
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="sm:max-w-sm rounded-3xl p-0 overflow-hidden border-0 shadow-2xl">
           {winner && (
             <>
               <div className="p-8 pb-4 text-center" style={{ backgroundColor: (winner.color || FOOD_COLORS[0]) + '12' }}>
-                <div 
+                <div
                   className="w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-4 text-white font-bold text-2xl shadow-lg"
-                  style={{ backgroundColor: winner.color || FOOD_COLORS[restaurants.indexOf(winner) % FOOD_COLORS.length] }}
+                  style={{ backgroundColor: winner.color || FOOD_COLORS[0] }}
                 >
                   {winner.name.charAt(0)}
                 </div>
@@ -141,7 +166,7 @@ const WheelOfFortune: React.FC<WheelOfFortuneProps> = ({ restaurants, officeAddr
                 <h2 className="text-2xl font-extrabold text-gray-900">{winner.name}</h2>
                 <p className="text-sm text-gray-500 mt-1">{winner.foodType}</p>
               </div>
-              
+
               <div className="px-6 pb-6 space-y-3">
                 {winner.address && (
                   <div className="flex items-center gap-2.5 text-sm text-gray-600">
@@ -149,7 +174,6 @@ const WheelOfFortune: React.FC<WheelOfFortuneProps> = ({ restaurants, officeAddr
                     <span>{winner.address}</span>
                   </div>
                 )}
-                
                 <div className="flex items-center gap-2.5 text-sm text-gray-600">
                   <MapPin className="h-4 w-4 text-gray-400 shrink-0" />
                   <span>
@@ -158,7 +182,6 @@ const WheelOfFortune: React.FC<WheelOfFortuneProps> = ({ restaurants, officeAddr
                       : `${(winner.distance / 1000).toFixed(1)}km du bureau`}
                   </span>
                 </div>
-                
                 <div className="flex flex-wrap gap-1.5 pt-1">
                   {winner.priceRange && (
                     <span className="text-xs bg-gray-100 text-gray-600 px-2.5 py-1 rounded-lg font-medium">{winner.priceRange}</span>
@@ -176,14 +199,12 @@ const WheelOfFortune: React.FC<WheelOfFortuneProps> = ({ restaurants, officeAddr
                     <span className="text-xs bg-red-50 text-red-600 px-2.5 py-1 rounded-lg font-medium">{getSpicyLevelLabel(winner.spicyLevel)}</span>
                   )}
                 </div>
-                
                 {winner.openingHours && winner.openingHours.length > 0 && (
                   <div className="flex items-start gap-2.5 text-sm text-gray-600">
                     <Clock className="h-4 w-4 text-gray-400 shrink-0 mt-0.5" />
                     <OpeningHoursBadge openingHours={winner.openingHours} currentDay={true} />
                   </div>
                 )}
-                
                 {winner.promotions && winner.promotions.length > 0 && (
                   <div className="p-3 rounded-xl bg-orange-50 border border-orange-100">
                     <p className="font-semibold text-orange-700 text-xs mb-1">Promotions</p>
@@ -192,7 +213,14 @@ const WheelOfFortune: React.FC<WheelOfFortuneProps> = ({ restaurants, officeAddr
                     ))}
                   </div>
                 )}
-                
+                {winner.location && winner.location.lat && winner.location.lng && (
+                  <OsmMiniMap
+                    lat={winner.location.lat}
+                    lon={winner.location.lng}
+                    name={winner.name}
+                  />
+                )}
+
                 <Button
                   onClick={() => setDialogOpen(false)}
                   className="w-full py-5 rounded-xl text-sm font-semibold bg-gray-900 hover:bg-gray-800 text-white mt-2"

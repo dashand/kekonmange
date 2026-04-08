@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 import OpeningHoursBadge from "@/components/OpeningHoursBadge";
+import OsmMiniMap from "@/components/OsmMiniMap";
 
 interface RestaurantCardProps {
   restaurant: Restaurant;
@@ -138,6 +139,17 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({ restaurant, onRemove, o
         </div>
         
         <OpeningHoursBadge openingHours={restaurant.openingHours} />
+
+        {/* Mini carte OSM */}
+        {restaurant.location && restaurant.location.lat && restaurant.location.lng && (
+          <div className="mt-3">
+            <OsmMiniMap
+              lat={restaurant.location.lat}
+              lon={restaurant.location.lng}
+              name={restaurant.name}
+            />
+          </div>
+        )}
 
         {/* Score de completude */}
         {completeness.score < 100 && (

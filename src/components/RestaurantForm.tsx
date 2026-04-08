@@ -78,6 +78,7 @@ const RestaurantForm: React.FC<RestaurantFormProps> = ({ onAdd, activeWorkplace 
   const [menuPhotos, setMenuPhotos] = useState<string[]>([]);
   const [promotions, setPromotions] = useState<Promotion[]>([]);
   const [openingHours, setOpeningHours] = useState<OpeningHours[]>([]);
+  const [osmLocation, setOsmLocation] = useState<{ lat: number; lng: number } | undefined>();
   
   const mapOsmCuisine = (cuisine?: string): string => {
     if (!cuisine) return "autre";
@@ -103,6 +104,7 @@ const RestaurantForm: React.FC<RestaurantFormProps> = ({ onAdd, activeWorkplace 
     if (osm.vegetarian) form.setValue("vegetarianOption", true);
     if (osm.halal) form.setValue("halalOption", true);
     if (osm.takeaway) form.setValue("takeaway", true);
+    if (osm.lat && osm.lon) setOsmLocation({ lat: osm.lat, lng: osm.lon });
   };
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -130,6 +132,7 @@ const RestaurantForm: React.FC<RestaurantFormProps> = ({ onAdd, activeWorkplace 
       promotions: promotions.length > 0 ? promotions : undefined,
       spicyLevel: values.spicyLevel,
       openingHours: openingHours.length > 0 ? openingHours : undefined,
+      location: osmLocation,
     };
     onAdd(newRestaurant);
   };

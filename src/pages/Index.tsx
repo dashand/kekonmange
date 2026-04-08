@@ -32,7 +32,16 @@ const Index = () => {
   const [filters, setFilters] = useState<FilterOptions>(defaultFilters);
   const [savedFilters, setSavedFilters] = useState<SavedFilter[]>(() => {
     const saved = localStorage.getItem("savedFilters");
-    return saved ? JSON.parse(saved) : defaultSavedFilters;
+    if (!saved) return defaultSavedFilters;
+    const parsed: SavedFilter[] = JSON.parse(saved);
+    // Merge: ensure all default filters are present
+    const merged = [...parsed];
+    for (const df of defaultSavedFilters) {
+      if (df.isDefault && !merged.find(f => f.id === df.id)) {
+        merged.push(df);
+      }
+    }
+    return merged;
   });
   
   const [showScrollButton, setShowScrollButton] = useState(false);

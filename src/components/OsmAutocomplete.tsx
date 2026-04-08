@@ -10,6 +10,9 @@ interface OsmAutocompleteProps {
   onSelect: (restaurant: OsmRestaurant) => void;
 }
 
+// In-memory cache to avoid refetching on every dialog open
+const memoryCache: Record<string, { restaurants: OsmRestaurant[]; cacheDate: string }> = {};
+
 const OsmAutocomplete: React.FC<OsmAutocompleteProps> = ({ workplaceId, workplaceAddress, onSelect }) => {
   const [query, setQuery] = useState("");
   const [osmData, setOsmData] = useState<OsmRestaurant[]>([]);
@@ -20,13 +23,19 @@ const OsmAutocomplete: React.FC<OsmAutocompleteProps> = ({ workplaceId, workplac
   const [cacheDate, setCacheDate] = useState<string | undefined>();
   const wrapperRef = useRef<HTMLDivElement>(null);
 
-  // Load OSM data on mount
+  // Load OSM data on mount (use memory cache first)
   useEffect(() => {
     if (!workplaceId || !workplaceAddress) return;
-    loadOsmData(false);
+    if (memoryCache[workplaceId]) {
+      setOsmData(memoryCache[workplaceId].restaurants);
+      setCacheDate(memoryCache[workplaceId].cacheDate);
+      setFromCache(true);
+      return;
+    }
+    loadOsmData();
   }, [workplaceId, workplaceAddress]);
 
-  const loadOsmData = async (forceRefresh: boolean) => {
+  const loadOsmData = async () => {
     setLoading(true);
     try {
       const { restaurants, fromCache: cached, cacheDate: date } = await getOsmRestaurants(
@@ -35,6 +44,7 @@ const OsmAutocomplete: React.FC<OsmAutocompleteProps> = ({ workplaceId, workplac
       setOsmData(restaurants);
       setFromCache(cached);
       setCacheDate(date);
+      memoryCache[workplaceId] = { restaurants, cacheDate: date || "" };
       if (!cached) {
         toast.success(`${restaurants.length} restaurants trouvés autour de votre bureau`);
       }
@@ -44,6 +54,11 @@ const OsmAutocomplete: React.FC<OsmAutocompleteProps> = ({ workplaceId, workplac
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleRefresh = () => {
+    delete memoryCache[workplaceId];
+    loadOsmData();
   };
 
   // Search within loaded data
@@ -102,7 +117,7 @@ const OsmAutocomplete: React.FC<OsmAutocompleteProps> = ({ workplaceId, workplac
           </span>
           <button
             type="button"
-            onClick={() => loadOsmData(true)}
+            onClick={handleRefresh}
             className="text-[10px] text-orange-500 hover:text-orange-600 flex items-center gap-0.5"
           >
             <RefreshCw className="h-3 w-3" /> Actualiser

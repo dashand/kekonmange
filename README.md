@@ -15,6 +15,19 @@
 
 </div>
 
+
+### Aperçu
+
+<p align="center">
+  <img src="docs/screenshot-home.png" alt="Page d accueil" width="60%">
+</p>
+<p align="center"><em>Page d accueil : filtres favoris, roulette et fiches restaurant</em></p>
+
+<p align="center">
+  <img src="docs/screenshot-detail.png" alt="Fiche restaurant" width="40%">
+</p>
+<p align="center"><em>Fiche detaillee : horaires, promos, carte OSM et itineraire</em></p>
+
 ## Fonctionnalités
 
 ### Gestion des restaurants

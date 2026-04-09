@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/banner.svg" alt="KekonMange Banner" width="100%">
+</p>
+
 # 🍴 KekonMange
 
 Application web collaborative pour gérer vos restaurants favoris autour du bureau et laisser le hasard choisir pour vous.

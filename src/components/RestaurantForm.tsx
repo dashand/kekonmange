@@ -38,6 +38,8 @@ const formSchema = z.object({
   reservationType: z.enum(["required", "recommended", "notAvailable"] as const).default("notAvailable"),
   phoneOrderAllowed: z.boolean().default(false),
   phoneNumber: z.string().optional(),
+  website: z.string().optional(),
+  reservationUrl: z.string().optional(),
   spicyLevel: z.enum(["none", "light", "medium", "hot"] as const).default("none"),
 });
 
@@ -100,6 +102,7 @@ const RestaurantForm: React.FC<RestaurantFormProps> = ({ onAdd, activeWorkplace 
     form.setValue("foodType", mapOsmCuisine(osm.cuisine));
     if (osm.address) form.setValue("address", osm.address);
     if (osm.phone) form.setValue("phoneNumber", osm.phone);
+    if (osm.website) form.setValue("website", osm.website);
     if (osm.distance) form.setValue("distance", Math.min(Math.max(Math.round(osm.distance / 50) * 50, 50), 5000));
     if (osm.vegetarian) form.setValue("vegetarianOption", true);
     if (osm.halal) form.setValue("halalOption", true);
@@ -114,7 +117,7 @@ const RestaurantForm: React.FC<RestaurantFormProps> = ({ onAdd, activeWorkplace 
       takeaway: false, vegetarianOption: false, halalOption: false,
       distance: 500, restaurantTickets: "none", priceRange: "€",
       reservationType: "notAvailable", phoneOrderAllowed: false,
-      phoneNumber: "", spicyLevel: "none",
+      phoneNumber: "", website: "", reservationUrl: "", spicyLevel: "none",
     },
   });
 
@@ -129,6 +132,8 @@ const RestaurantForm: React.FC<RestaurantFormProps> = ({ onAdd, activeWorkplace 
       restaurantTickets: values.restaurantTickets, priceRange: values.priceRange,
       reservationType: values.reservationType, phoneOrderAllowed: values.phoneOrderAllowed,
       phoneNumber: values.phoneNumber || undefined,
+      website: values.website || undefined,
+      reservationUrl: values.reservationUrl || undefined,
       promotions: promotions.length > 0 ? promotions : undefined,
       spicyLevel: values.spicyLevel,
       openingHours: openingHours.length > 0 ? openingHours : undefined,

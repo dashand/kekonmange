@@ -7,6 +7,7 @@ interface RestaurantListProps {
   restaurants: Restaurant[];
   onRemove: (id: string) => void;
   onEdit: (restaurant: Restaurant) => void;
+  onView: (restaurant: Restaurant) => void;
   officeAddress?: string;
 }
 
@@ -14,6 +15,7 @@ const RestaurantList: React.FC<RestaurantListProps> = ({
   restaurants,
   onRemove,
   onEdit,
+  onView,
   officeAddress,
 }) => {
   if (restaurants.length === 0) {
@@ -34,6 +36,7 @@ const RestaurantList: React.FC<RestaurantListProps> = ({
           restaurant={restaurant}
           onRemove={onRemove}
           onEdit={onEdit}
+              onView={onView}
           officeAddress={officeAddress}
         />
       ))}

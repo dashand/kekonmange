@@ -48,6 +48,8 @@ const formSchema = z.object({
   reservationType: z.enum(["required", "recommended", "notAvailable"] as const).default("notAvailable"),
   phoneOrderAllowed: z.boolean().default(false),
   phoneNumber: z.string().optional(),
+  website: z.string().optional(),
+  reservationUrl: z.string().optional(),
   spicyLevel: z.enum(["none", "light", "medium", "hot"] as const).default("none"),
 });
 
@@ -105,7 +107,7 @@ const RestaurantEditDialog: React.FC<RestaurantEditDialogProps> = ({
       takeaway: false, vegetarianOption: false, halalOption: false,
       distance: 500, restaurantTickets: "none", priceRange: "€",
       reservationType: "notAvailable", phoneOrderAllowed: false,
-      phoneNumber: "", spicyLevel: "none",
+      phoneNumber: "", website: "", reservationUrl: "", spicyLevel: "none",
     },
   });
 
@@ -126,6 +128,8 @@ const RestaurantEditDialog: React.FC<RestaurantEditDialogProps> = ({
         reservationType: restaurant.reservationType || "notAvailable",
         phoneOrderAllowed: restaurant.phoneOrderAllowed || false,
         phoneNumber: restaurant.phoneNumber || "",
+        website: restaurant.website || "",
+        reservationUrl: restaurant.reservationUrl || "",
         spicyLevel: restaurant.spicyLevel || "none",
       });
       setMenuPhotos(restaurant.menuPhotos || []);
@@ -159,6 +163,8 @@ const RestaurantEditDialog: React.FC<RestaurantEditDialogProps> = ({
       reservationType: values.reservationType,
       phoneOrderAllowed: values.phoneOrderAllowed,
       phoneNumber: values.phoneNumber || undefined,
+      website: values.website || undefined,
+      reservationUrl: values.reservationUrl || undefined,
       promotions: promotions.length > 0 ? promotions : undefined,
       spicyLevel: values.spicyLevel,
       openingHours: openingHours.length > 0 ? openingHours : undefined,

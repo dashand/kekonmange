@@ -14,13 +14,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import OpeningHoursBadge from "@/components/OpeningHoursBadge";
-import OsmMiniMap from "@/components/OsmMiniMap";
 
 interface RestaurantCardProps {
   restaurant: Restaurant;
   onRemove: (id: string) => void;
   onEdit: (restaurant: Restaurant) => void;
-  officeAddress?: string;
+  onView: (restaurant: Restaurant) => void;
 }
 
 const CUISINE_META: Record<string, { emoji: string; color: string; bg: string }> = {
@@ -35,7 +34,7 @@ const CUISINE_META: Record<string, { emoji: string; color: string; bg: string }>
   "autre": { emoji: "🍽️", color: "text-gray-500", bg: "bg-gray-50" },
 };
 
-const RestaurantCard: React.FC<RestaurantCardProps> = ({ restaurant, onRemove, onEdit, officeAddress }) => {
+const RestaurantCard: React.FC<RestaurantCardProps> = ({ restaurant, onRemove, onEdit, onView }) => {
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
   const hasPhotos = restaurant.menuPhotos && restaurant.menuPhotos.length > 0;
   const currentDay = getCurrentDay();
@@ -82,7 +81,7 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({ restaurant, onRemove, o
     : "text-red-500 bg-red-50";
 
   return (
-    <div className="h-full rounded-2xl bg-white border border-gray-100 shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden animate-scale-in group">
+    <div className="h-full rounded-2xl bg-white border border-gray-100 shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden animate-scale-in group cursor-pointer" onClick={() => onView(restaurant)}>
       {/* Color accent bar */}
       <div className="h-1.5" style={{ backgroundColor: restaurant.color || '#F97316' }} />
 
@@ -135,12 +134,12 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({ restaurant, onRemove, o
           <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
             <Button variant="ghost" size="icon"
               className="h-8 w-8 rounded-lg text-gray-300 hover:text-gray-600 hover:bg-gray-50"
-              onClick={() => onEdit(restaurant)}>
+              onClick={(e) => { e.stopPropagation(); onEdit(restaurant); }}>
               <Edit className="h-3.5 w-3.5" />
             </Button>
             <Button variant="ghost" size="icon"
               className="h-8 w-8 rounded-lg text-gray-300 hover:text-red-500 hover:bg-red-50"
-              onClick={handleRemove}>
+              onClick={(e) => { e.stopPropagation(); handleRemove(); }}>
               <Trash2 className="h-3.5 w-3.5" />
             </Button>
           </div>
@@ -190,7 +189,7 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({ restaurant, onRemove, o
           )}
           {restaurant.restaurantTickets && restaurant.restaurantTickets !== "none" && (
             <span className="text-[11px] bg-violet-50 text-violet-500 px-2 py-1 rounded-md font-medium inline-flex items-center gap-1">
-              <Ticket className="h-3 w-3" /> Ticket resto
+              <Ticket className="h-3 w-3" /> {restaurant.restaurantTickets === "paper" ? "Ticket papier" : restaurant.restaurantTickets === "card" ? "Carte ticket resto" : "Ticket papier + carte"}
             </span>
           )}
           {restaurant.reservationType && restaurant.reservationType !== "notAvailable" && (
@@ -216,48 +215,7 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({ restaurant, onRemove, o
 
         <OpeningHoursBadge openingHours={restaurant.openingHours} />
 
-        {/* Mini carte OSM */}
-        {restaurant.location && restaurant.location.lat && restaurant.location.lng && (
-          <div className="mt-3">
-            <OsmMiniMap
-              lat={restaurant.location.lat}
-              lon={restaurant.location.lng}
-              name={restaurant.name}
-              fromAddress={officeAddress}
-            />
-          </div>
-        )}
 
-        {/* Score de complétude */}
-        {completeness.score < 100 && (
-          <div className="mt-3 p-3 rounded-xl bg-gray-50 border border-gray-100">
-            <div className="flex items-center justify-between mb-1.5">
-              <span className="text-[11px] font-semibold text-gray-500 inline-flex items-center gap-1">
-                {completeness.score >= 70
-                  ? <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
-                  : <AlertCircle className="h-3.5 w-3.5 text-orange-400" />
-                }
-                Fiche {completeness.score}% complète
-              </span>
-              <button
-                type="button"
-                onClick={() => onEdit(restaurant)}
-                className="text-[11px] font-semibold text-orange-500 hover:text-orange-600 transition-colors inline-flex items-center gap-1"
-              >
-                <Edit className="h-3 w-3" /> Compléter
-              </button>
-            </div>
-            <div className="w-full h-1.5 bg-gray-200 rounded-full overflow-hidden">
-              <div
-                className={"h-full rounded-full transition-all " + (completeness.score >= 70 ? "bg-emerald-400" : completeness.score >= 40 ? "bg-orange-400" : "bg-red-400")}
-                style={{ width: `${completeness.score}%` }}
-              />
-            </div>
-            <p className="text-[10px] text-gray-400 mt-1.5">
-              Manque : {completeness.missing.slice(0, 3).join(", ")}{completeness.missing.length > 3 ? "..." : ""}
-            </p>
-          </div>
-        )}
 
         {/* Promos du jour */}
         {hasCurrentDayPromotion && (
@@ -296,6 +254,37 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({ restaurant, onRemove, o
             <p className="text-xs text-gray-500 inline-flex items-start gap-1.5">
               <BookOpen className="h-3.5 w-3.5 text-gray-400 shrink-0 mt-0.5" />
               <span><span className="font-medium text-gray-600">Menu :</span> {restaurant.menuInfo}</span>
+            </p>
+          </div>
+        )}
+
+        {/* Score de complétude */}
+        {completeness.score < 100 && (
+          <div className="mt-3 p-3 rounded-xl bg-gray-50 border border-gray-100">
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-[11px] font-semibold text-gray-500 inline-flex items-center gap-1">
+                {completeness.score >= 70
+                  ? <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
+                  : <AlertCircle className="h-3.5 w-3.5 text-orange-400" />
+                }
+                Fiche {completeness.score}% complète
+              </span>
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); onEdit(restaurant); }}
+                className="text-[11px] font-semibold text-orange-500 hover:text-orange-600 transition-colors inline-flex items-center gap-1"
+              >
+                <Edit className="h-3 w-3" /> Compléter
+              </button>
+            </div>
+            <div className="w-full h-1.5 bg-gray-200 rounded-full overflow-hidden">
+              <div
+                className={"h-full rounded-full transition-all " + (completeness.score >= 70 ? "bg-emerald-400" : completeness.score >= 40 ? "bg-orange-400" : "bg-red-400")}
+                style={{ width: `${completeness.score}%` }}
+              />
+            </div>
+            <p className="text-[10px] text-gray-400 mt-1.5">
+              Manque : {completeness.missing.slice(0, 3).join(", ")}{completeness.missing.length > 3 ? "..." : ""}
             </p>
           </div>
         )}

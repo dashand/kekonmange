@@ -1,3 +1,10 @@
+export interface Instance {
+  id: string;
+  code: string;
+  name: string;
+  lastAccessedAt: string;
+}
+
 export interface Restaurant {
   id: string;
   name: string;
@@ -23,6 +30,9 @@ export interface Restaurant {
     lat: number;
     lng: number;
   };
+  website?: string;
+  reservationUrl?: string;
+  isExample?: boolean;
 }
 
 export interface Workplace {
@@ -30,6 +40,7 @@ export interface Workplace {
   name: string;
   address: string;
   isActive: boolean;
+  instanceId?: string;
 }
 
 export interface Promotion {

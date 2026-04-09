@@ -1,10 +1,10 @@
 import React, { useState, useRef, useMemo } from "react";
 import { Restaurant } from "@/types/restaurant";
 import { Button } from "@/components/ui/button";
-import { MapPin, Clock, Utensils, Play } from "lucide-react";
+import { MapPin, Clock, Utensils, Play, Phone, ShoppingBag, Leaf, Moon, Flame, Euro, Ticket, CalendarCheck, Gift, BookOpen, Navigation, Globe, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { getSpicyLevelLabel } from "@/types/restaurant";
+import { getSpicyLevelLabel, getCurrentDay, getDayName } from "@/types/restaurant";
 import OpeningHoursBadge from "@/components/OpeningHoursBadge";
 import OsmMiniMap from "@/components/OsmMiniMap";
 
@@ -168,51 +168,142 @@ const WheelOfFortune: React.FC<WheelOfFortuneProps> = ({ restaurants, officeAddr
               </div>
 
               <div className="px-6 pb-6 space-y-3">
+                {/* Adresse et distance */}
                 {winner.address && (
-                  <div className="flex items-center gap-2.5 text-sm text-gray-600">
-                    <MapPin className="h-4 w-4 text-gray-400 shrink-0" />
-                    <span>{winner.address}</span>
+                  <div className="flex items-start gap-2.5 text-sm text-gray-600">
+                    <MapPin className="h-4 w-4 text-orange-400 shrink-0 mt-0.5" />
+                    <div>
+                      <span>{winner.address}</span>
+                      <span className={"ml-2 font-semibold " + (winner.distance <= 300 ? "text-emerald-500" : winner.distance <= 700 ? "text-orange-500" : "text-red-400")}>
+                        ({winner.distance < 1000 ? `${winner.distance}m` : `${(winner.distance / 1000).toFixed(1)}km`})
+                      </span>
+                    </div>
                   </div>
                 )}
-                <div className="flex items-center gap-2.5 text-sm text-gray-600">
-                  <MapPin className="h-4 w-4 text-gray-400 shrink-0" />
-                  <span>
-                    {winner.distance < 1000
-                      ? `${winner.distance}m du bureau`
-                      : `${(winner.distance / 1000).toFixed(1)}km du bureau`}
-                  </span>
-                </div>
-                <div className="flex flex-wrap gap-1.5 pt-1">
+
+                {/* Téléphone */}
+                {winner.phoneNumber && (
+                  <a href={`tel:${winner.phoneNumber}`} className="flex items-center gap-2.5 text-sm text-gray-600 hover:text-orange-500 transition-colors">
+                    <Phone className="h-4 w-4 text-orange-400 shrink-0" />
+                    <span>{winner.phoneNumber}</span>
+                  </a>
+                )}
+
+                {/* Tags */}
+                <div className="flex flex-wrap gap-1.5">
                   {winner.priceRange && (
-                    <span className="text-xs bg-gray-100 text-gray-600 px-2.5 py-1 rounded-lg font-medium">{winner.priceRange}</span>
+                    <span className={"text-xs px-2.5 py-1 rounded-lg font-semibold inline-flex items-center gap-1 " + (winner.priceRange === "€" ? "text-emerald-500 bg-emerald-50" : winner.priceRange === "€€" ? "text-blue-500 bg-blue-50" : winner.priceRange === "€€€" ? "text-orange-500 bg-orange-50" : "text-red-500 bg-red-50")}>
+                      <Euro className="h-3.5 w-3.5" />{winner.priceRange}
+                    </span>
                   )}
                   {winner.takeaway && (
-                    <span className="text-xs bg-gray-100 text-gray-600 px-2.5 py-1 rounded-lg font-medium">À emporter</span>
+                    <span className="text-xs bg-orange-50 text-orange-500 px-2.5 py-1 rounded-lg font-medium inline-flex items-center gap-1">
+                      <ShoppingBag className="h-3.5 w-3.5" /> À emporter
+                    </span>
                   )}
                   {winner.vegetarianOption && (
-                    <span className="text-xs bg-emerald-50 text-emerald-600 px-2.5 py-1 rounded-lg font-medium">Végétarien</span>
+                    <span className="text-xs bg-emerald-50 text-emerald-500 px-2.5 py-1 rounded-lg font-medium inline-flex items-center gap-1">
+                      <Leaf className="h-3.5 w-3.5" /> Végétarien
+                    </span>
                   )}
                   {winner.halalOption && (
-                    <span className="text-xs bg-blue-50 text-blue-600 px-2.5 py-1 rounded-lg font-medium">Halal</span>
+                    <span className="text-xs bg-sky-50 text-sky-500 px-2.5 py-1 rounded-lg font-medium inline-flex items-center gap-1">
+                      <Moon className="h-3.5 w-3.5" /> Halal
+                    </span>
                   )}
                   {winner.spicyLevel && winner.spicyLevel !== "none" && (
-                    <span className="text-xs bg-red-50 text-red-600 px-2.5 py-1 rounded-lg font-medium">{getSpicyLevelLabel(winner.spicyLevel)}</span>
+                    <span className={"text-xs px-2.5 py-1 rounded-lg font-medium inline-flex items-center gap-1 " + (winner.spicyLevel === "hot" ? "bg-red-100 text-red-600" : winner.spicyLevel === "medium" ? "bg-orange-50 text-orange-600" : "bg-yellow-50 text-yellow-600")}>
+                      <Flame className="h-3.5 w-3.5" /> {getSpicyLevelLabel(winner.spicyLevel)}
+                    </span>
+                  )}
+                  {winner.restaurantTickets && winner.restaurantTickets !== "none" && (
+                    <span className="text-xs bg-violet-50 text-violet-500 px-2.5 py-1 rounded-lg font-medium inline-flex items-center gap-1">
+                      <Ticket className="h-3.5 w-3.5" /> {winner.restaurantTickets === "paper" ? "Ticket papier" : winner.restaurantTickets === "card" ? "Carte ticket resto" : "Papier + carte"}
+                    </span>
+                  )}
+                  {winner.reservationType && winner.reservationType !== "notAvailable" && (
+                    <span className={"text-xs px-2.5 py-1 rounded-lg font-medium inline-flex items-center gap-1 " + (winner.reservationType === "required" ? "bg-red-50 text-red-500" : "bg-amber-50 text-amber-500")}>
+                      <CalendarCheck className="h-3.5 w-3.5" />
+                      {winner.reservationType === "required" ? "Résa obligatoire" : "Résa conseillée"}
+                    </span>
+                  )}
+                  {winner.phoneOrderAllowed && (
+                    <span className="text-xs bg-cyan-50 text-cyan-600 px-2.5 py-1 rounded-lg font-medium inline-flex items-center gap-1">
+                      <Phone className="h-3.5 w-3.5" /> Commande par tél.
+                    </span>
                   )}
                 </div>
-                {winner.openingHours && winner.openingHours.length > 0 && (
-                  <div className="flex items-start gap-2.5 text-sm text-gray-600">
-                    <Clock className="h-4 w-4 text-gray-400 shrink-0 mt-0.5" />
-                    <OpeningHoursBadge openingHours={winner.openingHours} currentDay={true} />
+
+                {/* Horaires du jour */}
+                {winner.openingHours && winner.openingHours.length > 0 && (() => {
+                  const today = getCurrentDay();
+                  const todayHours = winner.openingHours!.find(oh => oh.dayOfWeek === today);
+                  return (
+                    <div className="p-3 rounded-xl bg-gray-50 border border-gray-100">
+                      <p className="text-xs font-semibold text-gray-600 mb-1 inline-flex items-center gap-1.5">
+                        <Clock className="h-3.5 w-3.5 text-orange-400" /> Aujourd'hui ({getDayName(today)})
+                      </p>
+                      {!todayHours || todayHours.closed ? (
+                        <p className="text-sm text-red-500 font-medium ml-5">Fermé</p>
+                      ) : (
+                        <p className="text-sm text-gray-600 ml-5">
+                          {todayHours.lunchService && <span>Midi : {todayHours.lunchService.opens}–{todayHours.lunchService.closes}</span>}
+                          {todayHours.lunchService && todayHours.dinnerService && <span className="mx-1.5 text-gray-300">·</span>}
+                          {todayHours.dinnerService && <span>Soir : {todayHours.dinnerService.opens}–{todayHours.dinnerService.closes}</span>}
+                        </p>
+                      )}
+                    </div>
+                  );
+                })()}
+
+                {/* Promos du jour */}
+                {winner.promotions && winner.promotions.length > 0 && (() => {
+                  const today = getCurrentDay();
+                  const todayPromos = winner.promotions!.filter(p => p.dayOfWeek === null || p.dayOfWeek === today);
+                  if (todayPromos.length === 0) return null;
+                  return (
+                    <div className="p-3 rounded-xl bg-orange-50 border border-orange-100">
+                      <p className="font-semibold text-orange-600 text-xs uppercase tracking-wide mb-1 inline-flex items-center gap-1">
+                        <Gift className="h-3.5 w-3.5" /> Promo du jour
+                      </p>
+                      {todayPromos.map((promo) => (
+                        <p key={promo.id} className="text-sm text-orange-700 ml-5">
+                          {promo.description}{promo.discount ? ` (${promo.discount})` : ''}
+                        </p>
+                      ))}
+                    </div>
+                  );
+                })()}
+
+                {/* Menu */}
+                {winner.menuInfo && (
+                  <div className="p-3 rounded-xl bg-gray-50 border border-gray-100">
+                    <p className="text-sm text-gray-600 inline-flex items-start gap-2">
+                      <BookOpen className="h-4 w-4 text-gray-400 shrink-0 mt-0.5" />
+                      <span><span className="font-medium text-gray-700">Menu :</span> {winner.menuInfo}</span>
+                    </p>
                   </div>
                 )}
-                {winner.promotions && winner.promotions.length > 0 && (
-                  <div className="p-3 rounded-xl bg-orange-50 border border-orange-100">
-                    <p className="font-semibold text-orange-700 text-xs mb-1">Promotions</p>
-                    {winner.promotions.slice(0, 2).map((promo) => (
-                      <p key={promo.id} className="text-orange-600 text-xs">{promo.description}</p>
-                    ))}
+
+                {/* Liens web */}
+                {(winner.website || winner.reservationUrl) && (
+                  <div className="flex flex-wrap gap-2">
+                    {winner.website && (
+                      <a href={winner.website} target="_blank" rel="noopener noreferrer"
+                        className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors text-sm font-medium">
+                        <Globe className="h-4 w-4" /> Menu en ligne
+                      </a>
+                    )}
+                    {winner.reservationUrl && (
+                      <a href={winner.reservationUrl} target="_blank" rel="noopener noreferrer"
+                        className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition-colors text-sm font-medium">
+                        <CalendarCheck className="h-4 w-4" /> Réserver
+                      </a>
+                    )}
                   </div>
                 )}
+
+                {/* Carte OSM */}
                 {winner.location && winner.location.lat && winner.location.lng && (
                   <OsmMiniMap
                     lat={winner.location.lat}
@@ -226,7 +317,7 @@ const WheelOfFortune: React.FC<WheelOfFortuneProps> = ({ restaurants, officeAddr
                   onClick={() => setDialogOpen(false)}
                   className="w-full py-5 rounded-xl text-sm font-semibold bg-gray-900 hover:bg-gray-800 text-white mt-2"
                 >
-                  Bon appétit !
+                  🍽️ Bon appétit !
                 </Button>
               </div>
             </>

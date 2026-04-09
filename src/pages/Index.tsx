@@ -6,6 +6,7 @@ import FilterPanel from "@/components/FilterPanel";
 import FavoriteFilters from "@/components/FavoriteFilters";
 import WheelOfFortune from "@/components/WheelOfFortune";
 import RestaurantEditDialog from "@/components/RestaurantEditDialog";
+import RestaurantViewDialog from "@/components/RestaurantViewDialog";
 import WorkplaceSelector from "@/components/WorkplaceSelector";
 import { 
   Restaurant, FilterOptions, defaultFilters, Workplace,
@@ -19,13 +20,17 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { usePocketBase } from "@/hooks/use-pocketbase";
+import { useInstance } from "@/contexts/InstanceContext";
+import InstanceSelector from "@/components/InstanceSelector";
 
 const Index = () => {
+  const { activeInstance, loading: instanceLoading, updateInstanceName, switchInstance } = useInstance();
+  const [showInstanceSelector, setShowInstanceSelector] = useState(false);
   const {
     workplaces, restaurants, loading,
     addWorkplace, selectWorkplace, editWorkplace, removeWorkplace,
     addRestaurant, editRestaurant, removeRestaurant,
-  } = usePocketBase();
+  } = usePocketBase(activeInstance?.id);
 
   const activeWorkplace = workplaces.find(wp => wp.isActive) || null;
   
@@ -47,6 +52,8 @@ const Index = () => {
   const [showScrollButton, setShowScrollButton] = useState(false);
   const [showWorkplaces, setShowWorkplaces] = useState(false);
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+  const [viewingRestaurant, setViewingRestaurant] = useState<Restaurant | null>(null);
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [editingRestaurant, setEditingRestaurant] = useState<Restaurant | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isAddFormOpen, setIsAddFormOpen] = useState(false);
@@ -124,6 +131,11 @@ const Index = () => {
     await removeRestaurant(id);
   };
 
+  const handleViewRestaurant = (restaurant: Restaurant) => {
+    setViewingRestaurant(restaurant);
+    setIsViewDialogOpen(true);
+  };
+
   const handleEditRestaurant = (restaurant: Restaurant) => {
     setEditingRestaurant(restaurant);
     setIsEditDialogOpen(true);
@@ -187,10 +199,20 @@ const Index = () => {
     );
   }
   
+  console.log("[Index] activeInstance:", activeInstance, "instanceLoading:", instanceLoading, "showInstanceSelector:", showInstanceSelector);
+  if (instanceLoading) return <div className="min-h-screen flex items-center justify-center"><div className="animate-spin h-8 w-8 border-4 border-orange-500 border-t-transparent rounded-full" /></div>;
+
+  if (!activeInstance || showInstanceSelector) return <InstanceSelector />;
+
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
-        <Header />
+        <Header
+        instanceName={activeInstance.name}
+        instanceCode={activeInstance.code}
+        onUpdateName={updateInstanceName}
+        onSwitchInstance={() => setShowInstanceSelector(true)}
+      />
         
         {showScrollButton && (
           <Button variant="secondary" size="icon"
@@ -234,7 +256,7 @@ const Index = () => {
         <section className="my-6">
           <div className="flex flex-col md:flex-row gap-6">
             <div className="md:flex-1">
-              <WheelOfFortune restaurants={filteredRestaurants} officeAddress={activeWorkplace?.address || ""} />
+              <WheelOfFortune restaurants={filteredRestaurants.filter(r => !r.isExample)} officeAddress={activeWorkplace?.address || ""} />
             </div>
             {showAdvancedFilters && (
               <div className="w-full md:w-80">
@@ -254,6 +276,7 @@ const Index = () => {
             restaurants={filteredRestaurants}
             onRemove={handleRemoveRestaurant}
             onEdit={handleEditRestaurant}
+            onView={handleViewRestaurant}
             officeAddress={activeWorkplace?.address}
           />
         </section>
@@ -311,6 +334,14 @@ const Index = () => {
         </Dialog>
 
 
+
+        <RestaurantViewDialog
+          restaurant={viewingRestaurant}
+          open={isViewDialogOpen}
+          onOpenChange={setIsViewDialogOpen}
+          onEdit={handleEditRestaurant}
+          officeAddress={activeWorkplace?.address}
+        />
 
         <RestaurantEditDialog
           restaurant={editingRestaurant}

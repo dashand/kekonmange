@@ -10,6 +10,7 @@ function mapRecordToWorkplace(r: any): Workplace {
     name: r.name,
     address: r.address,
     isActive: r.isActive || false,
+    instanceId: r.instance || undefined,
   };
 }
 
@@ -36,11 +37,19 @@ function mapRecordToRestaurant(r: any): Restaurant {
     spicyLevel: r.spicyLevel || 'none',
     openingHours: r.openingHours || undefined,
     location: r.location || undefined,
+    website: r.website || undefined,
+    reservationUrl: r.reservationUrl || undefined,
+    isExample: r.isExample || false,
+    instanceId: r.instance || undefined,
   };
 }
 
 function mapRestaurantToRecord(r: Partial<Restaurant>): Record<string, any> {
   const data: Record<string, any> = { ...r };
+  if ('instanceId' in data) {
+    data.instance = data.instanceId;
+    delete data.instanceId;
+  }
   if ('workplaceId' in data) {
     data.workplace = data.workplaceId;
     delete data.workplaceId;
@@ -50,18 +59,23 @@ function mapRestaurantToRecord(r: Partial<Restaurant>): Record<string, any> {
 }
 
 // --- Workplaces ---
-export async function getWorkplaces(): Promise<Workplace[]> {
-  const records = await pb.collection('workplaces').getFullList({ sort: 'name' });
+export async function getWorkplaces(instanceId?: string): Promise<Workplace[]> {
+  const filter = instanceId ? `instance = '${instanceId}'` : '';
+  const records = await pb.collection('workplaces').getFullList({ sort: 'name', filter });
   return records.map(mapRecordToWorkplace);
 }
 
 export async function createWorkplace(wp: Omit<Workplace, 'id'>): Promise<Workplace> {
-  const record = await pb.collection('workplaces').create(wp);
+  const data: any = { ...wp };
+  if (data.instanceId) { data.instance = data.instanceId; delete data.instanceId; }
+  const record = await pb.collection('workplaces').create(data);
   return mapRecordToWorkplace(record);
 }
 
 export async function updateWorkplace(id: string, wp: Partial<Workplace>): Promise<Workplace> {
-  const record = await pb.collection('workplaces').update(id, wp);
+  const data: any = { ...wp };
+  if (data.instanceId) { data.instance = data.instanceId; delete data.instanceId; }
+  const record = await pb.collection('workplaces').update(id, data);
   return mapRecordToWorkplace(record);
 }
 
@@ -70,8 +84,9 @@ export async function deleteWorkplace(id: string): Promise<void> {
 }
 
 // --- Restaurants ---
-export async function getRestaurants(): Promise<Restaurant[]> {
-  const records = await pb.collection('restaurants').getFullList({ sort: 'name' });
+export async function getRestaurants(instanceId?: string): Promise<Restaurant[]> {
+  const filter = instanceId ? `instance = '${instanceId}'` : '';
+  const records = await pb.collection('restaurants').getFullList({ sort: 'name', filter });
   return records.map(mapRecordToRestaurant);
 }
 

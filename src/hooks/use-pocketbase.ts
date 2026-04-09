@@ -7,14 +7,14 @@ import {
 } from '@/services/pocketbase';
 import { toast } from 'sonner';
 
-export function usePocketBase() {
+export function usePocketBase(instanceId?: string) {
   const [workplaces, setWorkplaces] = useState<Workplace[]>([]);
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Initial fetch
   useEffect(() => {
-    Promise.all([getWorkplaces(), getRestaurants()])
+    Promise.all([getWorkplaces(instanceId), getRestaurants(instanceId)])
       .then(([wp, rest]) => {
         setWorkplaces(wp);
         setRestaurants(rest);
@@ -24,11 +24,12 @@ export function usePocketBase() {
         toast.error('Erreur de chargement des données');
       })
       .finally(() => setLoading(false));
-  }, []);
+  }, [instanceId]);
 
   // Realtime subscriptions
   useEffect(() => {
     subscribeToRestaurants((action, record) => {
+      if (instanceId && record.instanceId && record.instanceId !== instanceId) return;
       setRestaurants(prev => {
         if (action === 'create') {
           if (prev.find(r => r.id === record.id)) return prev;
@@ -41,6 +42,7 @@ export function usePocketBase() {
     });
 
     subscribeToWorkplaces((action, record) => {
+      if (instanceId && record.instanceId && record.instanceId !== instanceId) return;
       setWorkplaces(prev => {
         if (action === 'create') {
           if (prev.find(w => w.id === record.id)) return prev;
@@ -63,7 +65,7 @@ export function usePocketBase() {
         await Promise.all(workplaces.map(w => updateWorkplace(w.id, { isActive: false })));
         setWorkplaces(prev => prev.map(w => ({ ...w, isActive: false })));
       }
-      const created = await createWorkplace(wp);
+      const created = await createWorkplace({ ...wp, instanceId: instanceId } as any);
       return created;
     } catch (err) {
       toast.error('Erreur lors de l\'ajout du lieu');
@@ -103,7 +105,7 @@ export function usePocketBase() {
   const addRestaurant = async (r: Omit<Restaurant, 'id'> & { id?: string }) => {
     try {
       const { id, ...data } = r as any;
-      const created = await createRestaurant(data);
+      const created = await createRestaurant({ ...data, instanceId: instanceId } as any);
       return created;
     } catch (err) {
       toast.error('Erreur lors de l\'ajout du restaurant');

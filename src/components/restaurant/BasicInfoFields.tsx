@@ -214,6 +214,34 @@ const BasicInfoFields: React.FC<BasicInfoFieldsProps> = ({ form }) => {
 
       <FormField
         control={form.control}
+        name="website"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Site web / Menu en ligne</FormLabel>
+            <FormControl>
+              <Input placeholder="https://..." {...field} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <FormField
+        control={form.control}
+        name="reservationUrl"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Lien de réservation</FormLabel>
+            <FormControl>
+              <Input placeholder="https://..." {...field} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <FormField
+        control={form.control}
         name="menuInfo"
         render={({ field }) => (
           <FormItem>

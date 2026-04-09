@@ -5,23 +5,25 @@ interface OsmMiniMapProps {
   lat: number;
   lon: number;
   name?: string;
+  fromAddress?: string;
   className?: string;
 }
 
-const OsmMiniMap: React.FC<OsmMiniMapProps> = ({ lat, lon, name, className = "" }) => {
+const OsmMiniMap: React.FC<OsmMiniMapProps> = ({ lat, lon, name, fromAddress, className = "" }) => {
   const osmUrl = `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lon}#map=18/${lat}/${lon}`;
-  const directionsUrl = `https://www.openstreetmap.org/directions?to=${lat},${lon}`;
+  const directionsUrl = fromAddress
+    ? `https://www.openstreetmap.org/directions?from=${encodeURIComponent(fromAddress)}&to=${lat},${lon}&engine=fossgis_osrm_foot`
+    : `https://www.openstreetmap.org/directions?to=${lat},${lon}&engine=fossgis_osrm_foot`;
+  const embedUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${lon - 0.003},${lat - 0.002},${lon + 0.003},${lat + 0.002}&layer=mapnik&marker=${lat},${lon}`;
 
   return (
     <div className={`rounded-xl overflow-hidden border border-gray-100 ${className}`}>
-      <a href={osmUrl} target="_blank" rel="noopener noreferrer" className="block">
-        <img
-          src={`https://staticmap.openstreetmap.de/staticmap.php?center=${lat},${lon}&zoom=17&size=400x150&markers=${lat},${lon},ol-marker`}
-          alt={name ? `Carte de ${name}` : "Carte"}
-          className="w-full h-[120px] object-cover hover:opacity-90 transition-opacity"
-          loading="lazy"
-        />
-      </a>
+      <iframe
+        src={embedUrl}
+        className="w-full h-[130px] border-0"
+        loading="lazy"
+        title={name ? `Carte de ${name}` : "Carte"}
+      />
       <div className="flex items-center gap-1 px-3 py-2 bg-gray-50">
         <a
           href={osmUrl}

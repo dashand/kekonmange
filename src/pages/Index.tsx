@@ -254,6 +254,7 @@ const Index = () => {
             restaurants={filteredRestaurants}
             onRemove={handleRemoveRestaurant}
             onEdit={handleEditRestaurant}
+            officeAddress={activeWorkplace?.address}
           />
         </section>
 

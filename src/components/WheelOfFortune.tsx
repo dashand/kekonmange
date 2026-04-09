@@ -218,6 +218,7 @@ const WheelOfFortune: React.FC<WheelOfFortuneProps> = ({ restaurants, officeAddr
                     lat={winner.location.lat}
                     lon={winner.location.lng}
                     name={winner.name}
+                    fromAddress={officeAddress}
                   />
                 )}
 

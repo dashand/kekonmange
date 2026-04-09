@@ -1,25 +1,18 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { 
-  Restaurant, 
+import {
+  Restaurant,
   Promotion,
   OpeningHours
 } from "@/types/restaurant";
-import { 
-  SaveIcon, 
-  Clock
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Clock, Camera, Percent, UtensilsCrossed, ChevronDown, Loader2, Check } from "lucide-react";
 import PhotoUploader from "@/components/PhotoUploader";
 import {
   Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
   FormLabel,
+  FormDescription,
 } from "@/components/ui/form";
 import {
   Dialog,
@@ -27,16 +20,8 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogFooter,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
 import OpeningHoursEditor from "@/components/OpeningHoursEditor";
 import BasicInfoFields from "@/components/restaurant/BasicInfoFields";
 import OptionFields from "@/components/restaurant/OptionFields";
@@ -50,9 +35,7 @@ interface RestaurantEditDialogProps {
 }
 
 const formSchema = z.object({
-  name: z.string().min(2, {
-    message: "Le nom doit contenir au moins 2 caractères.",
-  }),
+  name: z.string().min(2, { message: "Le nom doit contenir au moins 2 caractères." }),
   foodType: z.string(),
   address: z.string().optional(),
   menuInfo: z.string().optional(),
@@ -68,6 +51,39 @@ const formSchema = z.object({
   spicyLevel: z.enum(["none", "light", "medium", "hot"] as const).default("none"),
 });
 
+interface CollapsibleSectionProps {
+  title: string;
+  icon: React.ReactNode;
+  subtitle?: string;
+  defaultOpen?: boolean;
+  children: React.ReactNode;
+  badge?: string;
+}
+
+const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({ title, icon, subtitle, defaultOpen = false, children, badge }) => {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
+  return (
+    <div className="rounded-2xl border border-gray-100 bg-white overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors"
+      >
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-xl bg-orange-50 text-orange-500">{icon}</div>
+          <div className="text-left">
+            <p className="font-semibold text-sm text-gray-800">{title}</p>
+            {subtitle && <p className="text-xs text-gray-400">{subtitle}</p>}
+          </div>
+          {badge && <span className="text-[10px] bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full font-medium">{badge}</span>}
+        </div>
+        <ChevronDown className={"h-4 w-4 text-gray-400 transition-transform " + (isOpen ? "rotate-180" : "")} />
+      </button>
+      {isOpen && <div className="px-4 pb-4 pt-0">{children}</div>}
+    </div>
+  );
+};
+
 const RestaurantEditDialog: React.FC<RestaurantEditDialogProps> = ({
   restaurant,
   open,
@@ -77,27 +93,23 @@ const RestaurantEditDialog: React.FC<RestaurantEditDialogProps> = ({
   const [menuPhotos, setMenuPhotos] = useState<string[]>([]);
   const [promotions, setPromotions] = useState<Promotion[]>([]);
   const [openingHours, setOpeningHours] = useState<OpeningHours[]>([]);
-  
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
+  const hasChangesRef = useRef(false);
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: restaurant?.name || "",
-      foodType: restaurant?.foodType || "français",
-      address: restaurant?.address || "",
-      menuInfo: restaurant?.menuInfo || "",
-      takeaway: restaurant?.takeaway || false,
-      vegetarianOption: restaurant?.vegetarianOption || false,
-      halalOption: restaurant?.halalOption || false,
-      distance: restaurant?.distance || 500,
-      restaurantTickets: restaurant?.restaurantTickets || "none",
-      priceRange: restaurant?.priceRange || "€",
-      reservationType: restaurant?.reservationType || "notAvailable",
-      phoneOrderAllowed: restaurant?.phoneOrderAllowed || false,
-      phoneNumber: restaurant?.phoneNumber || "",
-      spicyLevel: restaurant?.spicyLevel || "none",
+      name: "", foodType: "français", address: "", menuInfo: "",
+      takeaway: false, vegetarianOption: false, halalOption: false,
+      distance: 500, restaurantTickets: "none", priceRange: "€",
+      reservationType: "notAvailable", phoneOrderAllowed: false,
+      phoneNumber: "", spicyLevel: "none",
     },
   });
 
+  // Reset form when restaurant changes
   useEffect(() => {
     if (restaurant) {
       form.reset({
@@ -116,22 +128,27 @@ const RestaurantEditDialog: React.FC<RestaurantEditDialogProps> = ({
         phoneNumber: restaurant.phoneNumber || "",
         spicyLevel: restaurant.spicyLevel || "none",
       });
-      
       setMenuPhotos(restaurant.menuPhotos || []);
       setPromotions(restaurant.promotions || []);
       setOpeningHours(restaurant.openingHours || []);
+      hasChangesRef.current = false;
+      setSaved(false);
     }
   }, [restaurant, form]);
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    if (!restaurant) return;
+  // Build updated restaurant from current state
+  const buildUpdatedRestaurant = useCallback((): Restaurant | null => {
+    if (!restaurant) return null;
+    const values = form.getValues();
+    const result = formSchema.safeParse(values);
+    if (!result.success) return null;
 
-    const updatedRestaurant: Restaurant = {
+    return {
       ...restaurant,
       name: values.name,
       foodType: values.foodType,
-      address: values.address,
-      menuInfo: values.menuInfo,
+      address: values.address || undefined,
+      menuInfo: values.menuInfo || undefined,
       takeaway: values.takeaway,
       vegetarianOption: values.vegetarianOption,
       halalOption: values.halalOption,
@@ -141,80 +158,154 @@ const RestaurantEditDialog: React.FC<RestaurantEditDialogProps> = ({
       priceRange: values.priceRange,
       reservationType: values.reservationType,
       phoneOrderAllowed: values.phoneOrderAllowed,
-      phoneNumber: values.phoneNumber,
+      phoneNumber: values.phoneNumber || undefined,
       promotions: promotions.length > 0 ? promotions : undefined,
       spicyLevel: values.spicyLevel,
       openingHours: openingHours.length > 0 ? openingHours : undefined,
     };
+  }, [restaurant, form, menuPhotos, promotions, openingHours]);
 
-    onSave(updatedRestaurant);
-    toast.success(`${values.name} a été mis à jour`);
-    onOpenChange(false);
-  }
+  // Auto-save with debounce
+  const triggerAutoSave = useCallback(() => {
+    hasChangesRef.current = true;
+    setSaved(false);
+    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    saveTimeoutRef.current = setTimeout(() => {
+      const updated = buildUpdatedRestaurant();
+      if (updated) {
+        setSaving(true);
+        onSave(updated);
+        setTimeout(() => {
+          setSaving(false);
+          setSaved(true);
+          hasChangesRef.current = false;
+        }, 300);
+      }
+    }, 800);
+  }, [buildUpdatedRestaurant, onSave]);
+
+  // Watch form changes
+  useEffect(() => {
+    const subscription = form.watch(() => {
+      triggerAutoSave();
+    });
+    return () => subscription.unsubscribe();
+  }, [form, triggerAutoSave]);
+
+  // Watch non-form state changes (photos, promotions, openingHours)
+  useEffect(() => {
+    if (!restaurant) return;
+    // Skip the initial load
+    if (!hasChangesRef.current && menuPhotos === (restaurant.menuPhotos || [])) return;
+    triggerAutoSave();
+  }, [menuPhotos, promotions, openingHours]);
+
+  // Save on dialog close if needed
+  const handleOpenChange = (isOpen: boolean) => {
+    if (!isOpen && hasChangesRef.current) {
+      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+      const updated = buildUpdatedRestaurant();
+      if (updated) {
+        onSave(updated);
+        toast.success(`${updated.name} a été mis à jour`);
+      }
+    }
+    onOpenChange(isOpen);
+  };
+
+  // Cleanup
+  useEffect(() => {
+    return () => {
+      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    };
+  }, []);
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto">
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent className="sm:max-w-[900px] max-h-[90vh] overflow-y-auto rounded-2xl">
         <DialogHeader>
-          <DialogTitle>Modifier le restaurant</DialogTitle>
-          <DialogDescription>
-            Modifiez les informations du restaurant.
-          </DialogDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <DialogTitle>Modifier le restaurant</DialogTitle>
+              <DialogDescription>
+                Les modifications sont sauvegardées automatiquement.
+              </DialogDescription>
+            </div>
+            <div className="flex items-center gap-1.5 text-xs mr-6">
+              {saving && (
+                <span className="text-orange-500 flex items-center gap-1">
+                  <Loader2 className="h-3 w-3 animate-spin" /> Sauvegarde...
+                </span>
+              )}
+              {saved && !saving && (
+                <span className="text-emerald-500 flex items-center gap-1">
+                  <Check className="h-3 w-3" /> Sauvegardé
+                </span>
+              )}
+            </div>
+          </div>
         </DialogHeader>
 
         {restaurant && (
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <BasicInfoFields form={form} />
-              
-              <div className="space-y-2">
-                <FormLabel>Photos des menus</FormLabel>
-                <PhotoUploader 
-                  photos={menuPhotos} 
-                  onChange={setMenuPhotos} 
-                />
-                <FormDescription>
-                  Ajoutez des photos des menus ou des plats proposés
-                </FormDescription>
+            <div className="space-y-4">
+              {/* Section principale */}
+              <div className="rounded-2xl border border-gray-100 bg-white p-4 space-y-4">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="p-2 rounded-xl bg-orange-50 text-orange-500">
+                    <UtensilsCrossed className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-sm text-gray-800">Informations essentielles</p>
+                    <p className="text-xs text-gray-400">Nom, cuisine, distance et prix</p>
+                  </div>
+                </div>
+                <BasicInfoFields form={form} />
               </div>
 
-              {/* Section de gestion des promotions */}
-              <PromotionEditor 
-                promotions={promotions} 
-                onChange={setPromotions} 
-              />
+              {/* Options */}
+              <div className="rounded-2xl border border-gray-100 bg-white p-4 space-y-4">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="p-2 rounded-xl bg-orange-50 text-orange-500">
+                    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2l3 7h7l-5.5 4 2 7L12 16l-6.5 4 2-7L2 9h7z"/></svg>
+                  </div>
+                  <div>
+                    <p className="font-semibold text-sm text-gray-800">Options et services</p>
+                    <p className="text-xs text-gray-400">Réservation, à emporter, végétarien...</p>
+                  </div>
+                </div>
+                <OptionFields form={form} />
+              </div>
 
-              {/* Add Opening Hours Editor section */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <Clock className="h-4 w-4" />
-                    Horaires d'ouverture
-                  </CardTitle>
-                  <CardDescription>
-                    Définissez les jours et heures d'ouverture du restaurant
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <OpeningHoursEditor 
-                    openingHours={openingHours} 
-                    onChange={setOpeningHours} 
-                  />
-                </CardContent>
-              </Card>
+              {/* Sections repliables */}
+              <CollapsibleSection
+                title="Photos"
+                icon={<Camera className="h-4 w-4" />}
+                subtitle="Photos du menu ou des plats"
+                badge={menuPhotos.length > 0 ? `${menuPhotos.length} photo${menuPhotos.length > 1 ? 's' : ''}` : undefined}
+              >
+                <PhotoUploader photos={menuPhotos} onChange={setMenuPhotos} />
+              </CollapsibleSection>
 
-              <OptionFields form={form} />
+              <CollapsibleSection
+                title="Promotions"
+                icon={<Percent className="h-4 w-4" />}
+                subtitle="Réductions et offres spéciales"
+                badge={promotions.length > 0 ? `${promotions.length} promo${promotions.length > 1 ? 's' : ''}` : undefined}
+              >
+                <PromotionEditor promotions={promotions} onChange={setPromotions} />
+              </CollapsibleSection>
 
-              <DialogFooter>
-                <Button variant="outline" type="button" onClick={() => onOpenChange(false)}>
-                  Annuler
-                </Button>
-                <Button variant="food" type="submit">
-                  <SaveIcon className="mr-2 h-4 w-4" />
-                  Enregistrer
-                </Button>
-              </DialogFooter>
-            </form>
+              <CollapsibleSection
+                title="Horaires d'ouverture"
+                icon={<Clock className="h-4 w-4" />}
+                subtitle="Jours et heures d'ouverture"
+                badge={openingHours.length > 0 ? "Configuré" : undefined}
+                defaultOpen={openingHours.length > 0}
+              >
+                <OpeningHoursEditor openingHours={openingHours} onChange={setOpeningHours} />
+              </CollapsibleSection>
+            </div>
           </Form>
         )}
       </DialogContent>

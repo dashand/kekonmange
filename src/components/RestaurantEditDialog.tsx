@@ -201,10 +201,8 @@ const RestaurantEditDialog: React.FC<RestaurantEditDialogProps> = ({
   // Watch non-form state changes (photos, promotions, openingHours)
   useEffect(() => {
     if (!restaurant) return;
-    // Skip the initial load
-    if (!hasChangesRef.current && menuPhotos === (restaurant.menuPhotos || [])) return;
     triggerAutoSave();
-  }, [menuPhotos, promotions, openingHours]);
+  }, [menuPhotos, promotions, openingHours, triggerAutoSave]);
 
   // Save on dialog close if needed
   const handleOpenChange = (isOpen: boolean) => {

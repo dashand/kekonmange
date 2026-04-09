@@ -83,7 +83,6 @@ export const InstanceProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   }, []);
 
   const joinInstance = useCallback(async (code: string): Promise<Instance> => {
-    console.log("[Instance] joinInstance called with:", code);
     const normalized = code.toUpperCase().trim();
     const records = await pb.collection("instances").getFullList({ filter: `code = '${normalized}'` });
     if (records.length === 0) throw new Error("Instance introuvable");
@@ -99,7 +98,6 @@ export const InstanceProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setKnownInstances(prev => prev.find(i => i.code === normalized) ? prev : [...prev, inst]);
     setActiveInstance(inst);
     localStorage.setItem(ACTIVE_KEY, normalized);
-    console.log("[Instance] activeInstance set to:", inst);
     
     await pb.collection("instances").update(inst.id, { lastAccessedAt: new Date().toISOString() });
     return inst;

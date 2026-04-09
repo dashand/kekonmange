@@ -33,6 +33,7 @@ export interface Restaurant {
   website?: string;
   reservationUrl?: string;
   isExample?: boolean;
+  instanceId?: string;
 }
 
 export interface Workplace {

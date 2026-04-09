@@ -55,7 +55,7 @@ export function usePocketBase(instanceId?: string) {
     });
 
     return () => unsubscribeAll();
-  }, []);
+  }, [instanceId]);
 
   // --- Workplace mutations ---
   const addWorkplace = async (wp: Omit<Workplace, 'id'>) => {

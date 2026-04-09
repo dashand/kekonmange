@@ -25,7 +25,7 @@ import InstanceSelector from "@/components/InstanceSelector";
 
 const Index = () => {
   const { activeInstance, loading: instanceLoading, updateInstanceName, switchInstance } = useInstance();
-  const [showInstanceSelector, setShowInstanceSelector] = useState(false);
+  
   const {
     workplaces, restaurants, loading,
     addWorkplace, selectWorkplace, editWorkplace, removeWorkplace,
@@ -199,10 +199,9 @@ const Index = () => {
     );
   }
   
-  console.log("[Index] activeInstance:", activeInstance, "instanceLoading:", instanceLoading, "showInstanceSelector:", showInstanceSelector);
   if (instanceLoading) return <div className="min-h-screen flex items-center justify-center"><div className="animate-spin h-8 w-8 border-4 border-orange-500 border-t-transparent rounded-full" /></div>;
 
-  if (!activeInstance || showInstanceSelector) return <InstanceSelector />;
+  if (!activeInstance) return <InstanceSelector />;
 
   return (
     <div className="min-h-screen bg-background">
@@ -211,7 +210,7 @@ const Index = () => {
         instanceName={activeInstance.name}
         instanceCode={activeInstance.code}
         onUpdateName={updateInstanceName}
-        onSwitchInstance={() => setShowInstanceSelector(true)}
+        onSwitchInstance={() => { localStorage.removeItem('kekonmange_active_instance'); window.location.reload(); }}
       />
         
         {showScrollButton && (

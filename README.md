@@ -1,10 +1,19 @@
-<p align="center">
-  <img src="docs/banner.svg" alt="KekonMange Banner" width="100%">
-</p>
+<div align="center">
 
-# 🍴 KekonMange
+# 🍴 Kekon**Mange**
 
-Application web collaborative pour gérer vos restaurants favoris autour du bureau et laisser le hasard choisir pour vous.
+### Partagez les bonnes adresses entre collègues pour manger à midi
+
+[![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL_3.0-orange.svg)](LICENSE)
+[![React](https://img.shields.io/badge/React-18-61DAFB?logo=react)](https://react.dev)
+[![PocketBase](https://img.shields.io/badge/PocketBase-0.25-B8DBE4?logo=pocketbase)](https://pocketbase.io)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript)](https://www.typescriptlang.org)
+
+🍽️ Fiches resto · 🎰 Roulette repas · 👥 Collaboratif · 🗺️ Plans & itinéraires
+
+---
+
+</div>
 
 ## Fonctionnalités
 

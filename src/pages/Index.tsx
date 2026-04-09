@@ -349,6 +349,20 @@ const Index = () => {
           onOpenChange={setIsEditDialogOpen}
           onSave={handleSaveEditedRestaurant}
         />
+
+        {/* Footer */}
+        <footer className="mt-12 py-4 border-t border-gray-100 text-xs text-gray-400 flex items-center justify-between">
+          <a href="https://github.com/dashand/kekonmange" target="_blank" rel="noopener noreferrer" className="hover:text-orange-500 transition-colors">
+            KekonMange v1.0
+          </a>
+          <span>
+            by{" "}
+            <a href="https://www.linkedin.com/in/slalanne/" target="_blank" rel="noopener noreferrer" className="hover:text-orange-500 transition-colors">
+              slalanne
+            </a>
+            {" "}| AGPL-3.0
+          </span>
+        </footer>
       </div>
     </div>
   );

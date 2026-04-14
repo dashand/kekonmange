@@ -258,6 +258,15 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({ restaurant, onRemove, o
           </div>
         )}
 
+        {/* Auteur */}
+        {(restaurant.createdBy || restaurant.updatedBy) && (
+          <p className="mt-2 text-[10px] text-gray-400 truncate">
+            {restaurant.createdBy && <>Ajouté par <span className="font-medium text-gray-500">{restaurant.createdBy}</span></>}
+            {restaurant.createdBy && restaurant.updatedBy && restaurant.createdBy !== restaurant.updatedBy && <> · </>}
+            {restaurant.updatedBy && restaurant.createdBy !== restaurant.updatedBy && <>Modifié par <span className="font-medium text-gray-500">{restaurant.updatedBy}</span></>}
+          </p>
+        )}
+
         {/* Score de complétude */}
         {completeness.score < 100 && (
           <div className="mt-3 p-3 rounded-xl bg-gray-50 border border-gray-100">

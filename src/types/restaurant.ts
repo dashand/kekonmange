@@ -33,6 +33,8 @@ export interface Restaurant {
   website?: string;
   reservationUrl?: string;
   isExample?: boolean;
+  createdBy?: string;
+  updatedBy?: string;
   instanceId?: string;
 }
 

@@ -22,8 +22,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { usePocketBase } from "@/hooks/use-pocketbase";
 import { useInstance } from "@/contexts/InstanceContext";
 import InstanceSelector from "@/components/InstanceSelector";
+import NicknamePrompt from "@/components/NicknamePrompt";
+import { useNickname } from "@/hooks/use-nickname";
 
 const Index = () => {
+  const { nickname, setNickname, hasNickname } = useNickname();
   const { activeInstance, loading: instanceLoading, updateInstanceName, switchInstance } = useInstance();
   
   const {
@@ -119,6 +122,8 @@ const Index = () => {
   const handleAddRestaurant = async (newRestaurant: Restaurant) => {
     if (activeWorkplace) {
       newRestaurant.workplaceId = activeWorkplace.id;
+      newRestaurant.createdBy = nickname || undefined;
+      newRestaurant.updatedBy = nickname || undefined;
       await addRestaurant(newRestaurant);
       setIsAddFormOpen(false);
       toast.success(`${newRestaurant.name} a été ajouté`);
@@ -142,6 +147,7 @@ const Index = () => {
   };
 
   const handleSaveEditedRestaurant = async (updatedRestaurant: Restaurant) => {
+    updatedRestaurant.updatedBy = nickname || undefined;
     await editRestaurant(updatedRestaurant);
   };
   
@@ -202,6 +208,8 @@ const Index = () => {
   if (instanceLoading) return <div className="min-h-screen flex items-center justify-center"><div className="animate-spin h-8 w-8 border-4 border-orange-500 border-t-transparent rounded-full" /></div>;
 
   if (!activeInstance) return <InstanceSelector />;
+
+  if (!hasNickname) return <NicknamePrompt onSubmit={setNickname} />;
 
   return (
     <div className="min-h-screen bg-background">

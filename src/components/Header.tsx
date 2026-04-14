@@ -9,9 +9,11 @@ interface HeaderProps {
   instanceCode?: string;
   onUpdateName?: (name: string) => Promise<void>;
   onSwitchInstance?: () => void;
+  nickname?: string;
+  onChangeNickname?: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ instanceName, instanceCode, onUpdateName, onSwitchInstance }) => {
+const Header: React.FC<HeaderProps> = ({ instanceName, instanceCode, onUpdateName, onSwitchInstance, nickname, onChangeNickname }) => {
   const [editing, setEditing] = useState(false);
   const [editName, setEditName] = useState(instanceName || "");
 
@@ -85,6 +87,14 @@ const Header: React.FC<HeaderProps> = ({ instanceName, instanceCode, onUpdateNam
             </div>
           )}
         </div>
+      )}
+
+      {nickname && (
+        <button onClick={onChangeNickname}
+          className="text-[11px] text-gray-400 hover:text-orange-500 transition-colors mt-1"
+          title="Changer de pseudo">
+          Connecté en tant que <span className="font-semibold text-gray-600">{nickname}</span>
+        </button>
       )}
 
       <p className="text-gray-400 text-center max-w-md text-sm">

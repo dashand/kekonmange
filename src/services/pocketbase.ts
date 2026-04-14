@@ -40,6 +40,8 @@ function mapRecordToRestaurant(r: any): Restaurant {
     website: r.website || undefined,
     reservationUrl: r.reservationUrl || undefined,
     isExample: r.isExample || false,
+    createdBy: r.createdBy || undefined,
+    updatedBy: r.updatedBy || undefined,
     instanceId: r.instance || undefined,
   };
 }

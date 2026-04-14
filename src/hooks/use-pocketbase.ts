@@ -7,7 +7,7 @@ import {
 } from '@/services/pocketbase';
 import { toast } from 'sonner';
 
-export function usePocketBase(instanceId?: string) {
+export function usePocketBase(instanceId?: string, nickname?: string) {
   const [workplaces, setWorkplaces] = useState<Workplace[]>([]);
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [loading, setLoading] = useState(true);
@@ -33,9 +33,20 @@ export function usePocketBase(instanceId?: string) {
       setRestaurants(prev => {
         if (action === 'create') {
           if (prev.find(r => r.id === record.id)) return prev;
+          if (record.createdBy && record.createdBy !== nickname) {
+            toast.info(record.createdBy + " a ajout\u00e9 " + record.name);
+          }
           return [...prev, record];
         }
-        if (action === 'update') return prev.map(r => r.id === record.id ? record : r);
+        if (action === 'update') {
+          if (record.updatedBy && record.updatedBy !== nickname) {
+            const existing = prev.find(r => r.id === record.id);
+            if (existing && existing.name) {
+              toast.info(record.updatedBy + " a modifi\u00e9 " + record.name);
+            }
+          }
+          return prev.map(r => r.id === record.id ? record : r);
+        }
         if (action === 'delete') return prev.filter(r => r.id !== record.id);
         return prev;
       });

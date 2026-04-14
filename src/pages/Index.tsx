@@ -34,7 +34,7 @@ const Index = () => {
     workplaces, restaurants, loading,
     addWorkplace, selectWorkplace, editWorkplace, removeWorkplace,
     addRestaurant, editRestaurant, removeRestaurant,
-  } = usePocketBase(activeInstance?.id);
+  } = usePocketBase(activeInstance?.id, nickname);
   const { getVoteSummary, castVote } = useVotes(activeInstance?.id, nickname);
 
   const activeWorkplace = workplaces.find(wp => wp.isActive) || null;

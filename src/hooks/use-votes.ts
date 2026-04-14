@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import PocketBase from "pocketbase";
+import { toast } from "sonner";
 
 const pb = new PocketBase(window.location.origin);
 
@@ -19,8 +20,7 @@ export interface VoteSummary {
 
 export function useVotes(instanceId?: string, nickname?: string) {
   const [votes, setVotes] = useState<Vote[]>([]);
-  const votesRef = useRef(votes);
-  votesRef.current = votes;
+  const busyRef = useRef(false);
 
   useEffect(() => {
     const filter = instanceId ? `instance = '${instanceId}'` : "";
@@ -40,7 +40,6 @@ export function useVotes(instanceId?: string, nickname?: string) {
       .catch(console.error);
   }, [instanceId]);
 
-  // Realtime
   useEffect(() => {
     pb.collection("votes").subscribe("*", (e) => {
       const v: Vote = {
@@ -69,14 +68,11 @@ export function useVotes(instanceId?: string, nickname?: string) {
 
   const getVoteSummary = useCallback(
     (restaurantId: string): VoteSummary => {
-      const restaurantVotes = votes.filter(
-        (v) => v.restaurant === restaurantId
-      );
+      const rv = votes.filter((v) => v.restaurant === restaurantId);
       return {
-        up: restaurantVotes.filter((v) => v.vote === "up").length,
-        down: restaurantVotes.filter((v) => v.vote === "down").length,
-        userVote:
-          restaurantVotes.find((v) => v.nickname === nickname)?.vote || null,
+        up: rv.filter((v) => v.vote === "up").length,
+        down: rv.filter((v) => v.vote === "down").length,
+        userVote: rv.find((v) => v.nickname === nickname)?.vote || null,
       };
     },
     [votes, nickname]
@@ -84,28 +80,34 @@ export function useVotes(instanceId?: string, nickname?: string) {
 
   const castVote = useCallback(
     async (restaurantId: string, voteType: "up" | "down") => {
-      if (!nickname) return;
+      if (!nickname || busyRef.current) return;
+      busyRef.current = true;
 
-      const existing = votesRef.current.find(
-        (v) => v.restaurant === restaurantId && v.nickname === nickname
-      );
+      try {
+        // Always re-fetch the current vote from the server to avoid stale state
+        const filter = `restaurant = '${restaurantId}' && nickname = '${nickname}'`;
+        const existing = await pb.collection("votes").getFullList({ filter });
 
-      if (existing) {
-        if (existing.vote === voteType) {
-          // Same vote = remove
-          await pb.collection("votes").delete(existing.id);
+        if (existing.length > 0) {
+          const record = existing[0];
+          if (record.vote === voteType) {
+            await pb.collection("votes").delete(record.id);
+          } else {
+            await pb.collection("votes").update(record.id, { vote: voteType });
+          }
         } else {
-          // Different vote = update
-          await pb.collection("votes").update(existing.id, { vote: voteType });
+          await pb.collection("votes").create({
+            restaurant: restaurantId,
+            nickname,
+            vote: voteType,
+            instance: instanceId || "",
+          });
         }
-      } else {
-        // New vote
-        await pb.collection("votes").create({
-          restaurant: restaurantId,
-          nickname,
-          vote: voteType,
-          instance: instanceId || "",
-        });
+      } catch (err) {
+        console.error("Vote error:", err);
+        toast.error("Erreur lors du vote");
+      } finally {
+        busyRef.current = false;
       }
     },
     [nickname, instanceId]

@@ -387,6 +387,8 @@ const Index = () => {
           onOpenChange={setIsViewDialogOpen}
           onEdit={handleEditRestaurant}
           officeAddress={activeWorkplace?.address}
+          instanceId={activeInstance?.id}
+          nickname={nickname}
         />
 
         <RestaurantEditDialog

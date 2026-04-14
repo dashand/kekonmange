@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Restaurant, getDayName, getCurrentDay, getSpicyLevelLabel, getCompletenessScore
 } from "@/types/restaurant";
@@ -9,6 +9,8 @@ import {
 } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import GroupOrderDialog from "@/components/GroupOrderDialog";
+import { ShoppingCart } from "lucide-react";
 import OsmMiniMap from "@/components/OsmMiniMap";
 import OpeningHoursBadge from "@/components/OpeningHoursBadge";
 
@@ -30,11 +32,14 @@ interface RestaurantViewDialogProps {
   onOpenChange: (open: boolean) => void;
   onEdit: (restaurant: Restaurant) => void;
   officeAddress?: string;
+  instanceId?: string;
+  nickname?: string;
 }
 
 const RestaurantViewDialog: React.FC<RestaurantViewDialogProps> = ({
-  restaurant, open, onOpenChange, onEdit, officeAddress
+  restaurant, open, onOpenChange, onEdit, officeAddress, instanceId, nickname
 }) => {
+  const [groupOrderOpen, setGroupOrderOpen] = useState(false);
   if (!restaurant) return null;
 
   const currentDay = getCurrentDay();
@@ -99,7 +104,25 @@ const RestaurantViewDialog: React.FC<RestaurantViewDialogProps> = ({
             >
               <Edit className="h-3.5 w-3.5 mr-1" /> Modifier
             </Button>
+            <Button
+              variant="outline" size="sm"
+              className="text-emerald-600 border-emerald-200 hover:bg-emerald-50"
+              onClick={() => setGroupOrderOpen(true)}
+            >
+              <ShoppingCart className="h-3.5 w-3.5 mr-1" /> Commande groupée
+            </Button>
           </div>
+
+          {restaurant && nickname && (
+            <GroupOrderDialog
+              open={groupOrderOpen}
+              onOpenChange={setGroupOrderOpen}
+              restaurantId={restaurant.id}
+              restaurantName={restaurant.name}
+              instanceId={instanceId}
+              nickname={nickname}
+            />
+          )}
 
           {/* Distance & Address */}
           <div className="space-y-1">

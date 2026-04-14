@@ -175,15 +175,6 @@ export const getCurrentDay = (): DayOfWeek => {
   return new Date().getDay() as DayOfWeek;
 };
 
-export interface ExportData {
-  version: string;
-  date: string;
-  workplaces: Workplace[];
-  restaurants: Restaurant[];
-}
-
-export const EXPORT_VERSION = "1.0.0";
-
 export const getSpicyLevelLabel = (level: SpicyLevel): string => {
   switch (level) {
     case "none":

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import PocketBase from "pocketbase";
 
 const pb = new PocketBase(window.location.origin);
@@ -19,6 +19,8 @@ export interface VoteSummary {
 
 export function useVotes(instanceId?: string, nickname?: string) {
   const [votes, setVotes] = useState<Vote[]>([]);
+  const votesRef = useRef(votes);
+  votesRef.current = votes;
 
   useEffect(() => {
     const filter = instanceId ? `instance = '${instanceId}'` : "";
@@ -84,7 +86,7 @@ export function useVotes(instanceId?: string, nickname?: string) {
     async (restaurantId: string, voteType: "up" | "down") => {
       if (!nickname) return;
 
-      const existing = votes.find(
+      const existing = votesRef.current.find(
         (v) => v.restaurant === restaurantId && v.nickname === nickname
       );
 
@@ -106,7 +108,7 @@ export function useVotes(instanceId?: string, nickname?: string) {
         });
       }
     },
-    [votes, nickname, instanceId]
+    [nickname, instanceId]
   );
 
   return { getVoteSummary, castVote };

@@ -20,10 +20,10 @@ export interface VoteSummary {
 
 export function useVotes(instanceId?: string, nickname?: string) {
   const [votes, setVotes] = useState<Vote[]>([]);
-  const busyRef = useRef(false);
+  const pendingRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
-    const filter = instanceId ? `instance = '${instanceId}'` : "";
+    const filter = instanceId ? "instance = '" + instanceId + "'" : "";
     pb.collection("votes")
       .getFullList({ filter })
       .then((records) => {
@@ -80,12 +80,15 @@ export function useVotes(instanceId?: string, nickname?: string) {
 
   const castVote = useCallback(
     async (restaurantId: string, voteType: "up" | "down") => {
-      if (!nickname || busyRef.current) return;
-      busyRef.current = true;
+      if (!nickname) return;
+
+      // Prevent concurrent votes on same restaurant
+      if (pendingRef.current.has(restaurantId)) return;
+      pendingRef.current.add(restaurantId);
 
       try {
-        // Always re-fetch the current vote from the server to avoid stale state
-        const filter = `restaurant = '${restaurantId}' && nickname = '${nickname}'`;
+        // Query server for existing vote
+        const filter = "restaurant = '" + restaurantId + "' && nickname = '" + nickname + "'";
         const existing = await pb.collection("votes").getFullList({ filter });
 
         if (existing.length > 0) {
@@ -107,7 +110,7 @@ export function useVotes(instanceId?: string, nickname?: string) {
         console.error("Vote error:", err);
         toast.error("Erreur lors du vote");
       } finally {
-        busyRef.current = false;
+        pendingRef.current.delete(restaurantId);
       }
     },
     [nickname, instanceId]

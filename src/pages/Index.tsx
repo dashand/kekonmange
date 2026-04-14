@@ -28,7 +28,6 @@ import { useVotes } from "@/hooks/use-votes";
 
 const Index = () => {
   const { nickname, setNickname, hasNickname } = useNickname();
-  const { getVoteSummary, castVote } = useVotes(activeInstance?.id, nickname);
   const { activeInstance, loading: instanceLoading, updateInstanceName, switchInstance } = useInstance();
   
   const {
@@ -36,6 +35,7 @@ const Index = () => {
     addWorkplace, selectWorkplace, editWorkplace, removeWorkplace,
     addRestaurant, editRestaurant, removeRestaurant,
   } = usePocketBase(activeInstance?.id);
+  const { getVoteSummary, castVote } = useVotes(activeInstance?.id, nickname);
 
   const activeWorkplace = workplaces.find(wp => wp.isActive) || null;
   

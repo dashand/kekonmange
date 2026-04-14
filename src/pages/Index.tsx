@@ -22,6 +22,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { usePocketBase } from "@/hooks/use-pocketbase";
 import { useInstance } from "@/contexts/InstanceContext";
 import InstanceSelector from "@/components/InstanceSelector";
+import InstallPrompt from "@/components/InstallPrompt";
 import NicknamePrompt from "@/components/NicknamePrompt";
 import { useNickname } from "@/hooks/use-nickname";
 import { useVotes } from "@/hooks/use-votes";
@@ -233,6 +234,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <InstallPrompt />
       <div className="container mx-auto px-4 py-8">
         <Header
         instanceName={activeInstance.name}

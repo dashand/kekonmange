@@ -33,7 +33,7 @@ const NicknamePrompt: React.FC<NicknamePromptProps> = ({ onSubmit }) => {
           <Input
             value={value}
             onChange={(e) => setValue(e.target.value)}
-            placeholder="Ton pr\u00e9nom ou pseudo"
+            placeholder="Ton prénom ou pseudo"
             maxLength={30}
             autoFocus
             className="text-center text-lg"

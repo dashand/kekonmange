@@ -13,7 +13,7 @@ import {
   getCurrentDay, SavedFilter, defaultSavedFilters,
   getRandomColor, getCompletenessScore
 } from "@/types/restaurant";
-import { ChevronUp, ChevronDown, Plus, FilterX, SlidersHorizontal, Loader2, MapPin } from "lucide-react";
+import { ChevronUp, ChevronDown, Plus, FilterX, SlidersHorizontal, Loader2, MapPin, ArrowUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
@@ -40,6 +40,24 @@ const Index = () => {
   const activeWorkplace = workplaces.find(wp => wp.isActive) || null;
   
   const [filters, setFilters] = useState<FilterOptions>(defaultFilters);
+  const priceOrder: Record<string, number> = { "\u20ac": 1, "\u20ac\u20ac": 2, "\u20ac\u20ac\u20ac": 3, "\u20ac\u20ac\u20ac\u20ac": 4 };
+
+  const sortRestaurants = (list: Restaurant[]): Restaurant[] => {
+    return [...list].sort((a, b) => {
+      switch (sortBy) {
+        case "distance": return a.distance - b.distance;
+        case "price": return (priceOrder[a.priceRange] || 0) - (priceOrder[b.priceRange] || 0);
+        case "votes": {
+          const va = getVoteSummary(a.id);
+          const vb = getVoteSummary(b.id);
+          return (vb.up - vb.down) - (va.up - va.down);
+        }
+        default: return a.name.localeCompare(b.name);
+      }
+    });
+  };
+
+  const [sortBy, setSortBy] = useState<"name" | "distance" | "price" | "votes">("name");
   const [savedFilters, setSavedFilters] = useState<SavedFilter[]>(() => {
     const saved = localStorage.getItem("savedFilters");
     if (!saved) return defaultSavedFilters;
@@ -280,9 +298,24 @@ const Index = () => {
         <Separator className="my-10" />
         
         <section className="my-6">
-          <h2 className="text-lg font-bold text-gray-900 mb-4">Nos restaurants</h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-bold text-gray-900">Nos restaurants</h2>
+            <div className="flex items-center gap-1.5">
+              <ArrowUpDown className="h-3.5 w-3.5 text-gray-400" />
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as any)}
+                className="text-xs bg-gray-50 border border-gray-200 rounded-lg px-2 py-1.5 text-gray-600 focus:outline-none focus:ring-1 focus:ring-orange-300"
+              >
+                <option value="name">Nom</option>
+                <option value="distance">Distance</option>
+                <option value="price">Prix</option>
+                <option value="votes">Popularit\u00e9</option>
+              </select>
+            </div>
+          </div>
           <RestaurantList
-            restaurants={filteredRestaurants}
+            restaurants={sortRestaurants(filteredRestaurants)}
             onRemove={handleRemoveRestaurant}
             onEdit={handleEditRestaurant}
             onView={handleViewRestaurant}

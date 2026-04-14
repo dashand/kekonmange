@@ -9,16 +9,32 @@ interface BeforeInstallPromptEvent extends Event {
 
 const InstallPrompt: React.FC = () => {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
-  const [showIOSHint, setShowIOSHint] = useState(false);
   const [dismissed, setDismissed] = useState(false);
+  const [isStandalone, setIsStandalone] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [isIOS, setIsIOS] = useState(false);
 
   useEffect(() => {
     // Already installed as PWA
-    if (window.matchMedia("(display-mode: standalone)").matches) return;
+    if (window.matchMedia("(display-mode: standalone)").matches) {
+      setIsStandalone(true);
+      return;
+    }
 
     // Check if dismissed recently
     const dismissedAt = localStorage.getItem("kekonmange_install_dismissed");
-    if (dismissedAt && Date.now() - parseInt(dismissedAt) < 7 * 24 * 60 * 60 * 1000) return;
+    if (dismissedAt && Date.now() - parseInt(dismissedAt) < 7 * 24 * 60 * 60 * 1000) {
+      setDismissed(true);
+      return;
+    }
+
+    // Mobile detection
+    const mobile = /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    setIsMobile(mobile);
+
+    // iOS detection
+    const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+    setIsIOS(ios);
 
     // Android/Chrome: intercept install prompt
     const handler = (e: Event) => {
@@ -27,22 +43,17 @@ const InstallPrompt: React.FC = () => {
     };
     window.addEventListener("beforeinstallprompt", handler);
 
-    // iOS detection
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
-    const isSafari = /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
-    if (isIOS && isSafari) {
-      setShowIOSHint(true);
-    }
-
     return () => window.removeEventListener("beforeinstallprompt", handler);
   }, []);
 
   const handleInstall = async () => {
-    if (!deferredPrompt) return;
-    await deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    if (outcome === "accepted") {
-      setDeferredPrompt(null);
+    if (deferredPrompt) {
+      await deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === "accepted") {
+        setDeferredPrompt(null);
+        setDismissed(true);
+      }
     }
   };
 
@@ -51,12 +62,11 @@ const InstallPrompt: React.FC = () => {
     localStorage.setItem("kekonmange_install_dismissed", Date.now().toString());
   };
 
-  if (dismissed) return null;
-  if (!deferredPrompt && !showIOSHint) return null;
+  if (isStandalone || dismissed || !isMobile) return null;
 
   return (
     <div className="fixed bottom-4 left-4 right-4 z-50 animate-fade-in">
-      <div className="max-w-md mx-auto bg-white rounded-2xl shadow-lg border border-gray-100 p-4">
+      <div className="max-w-md mx-auto bg-white rounded-2xl shadow-lg border border-orange-200 p-4">
         <div className="flex items-start gap-3">
           <div className="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center shrink-0">
             <Download className="h-5 w-5 text-orange-500" />
@@ -66,12 +76,12 @@ const InstallPrompt: React.FC = () => {
             {deferredPrompt ? (
               <>
                 <p className="text-xs text-gray-500 mt-0.5">
-                  Acc{'é'}dez rapidement depuis votre {'é'}cran d'accueil
+                  Ajoutez l'app sur votre écran d'accueil pour un accès rapide
                 </p>
                 <div className="flex gap-2 mt-3">
                   <Button onClick={handleInstall} size="sm"
                     className="bg-orange-500 hover:bg-orange-600 text-white text-xs rounded-xl px-4">
-                    Installer
+                    <Download className="h-3.5 w-3.5 mr-1.5" /> Installer
                   </Button>
                   <Button onClick={handleDismiss} variant="ghost" size="sm"
                     className="text-xs text-gray-400 rounded-xl">
@@ -79,12 +89,22 @@ const InstallPrompt: React.FC = () => {
                   </Button>
                 </div>
               </>
-            ) : (
+            ) : isIOS ? (
               <>
                 <p className="text-xs text-gray-500 mt-0.5">
                   Appuyez sur{" "}
                   <Share className="inline h-3.5 w-3.5 text-blue-500 -mt-0.5" />{" "}
-                  puis <strong>Sur l'{'é'}cran d'accueil</strong>
+                  puis <strong>Sur l'écran d'accueil</strong>
+                </p>
+                <Button onClick={handleDismiss} variant="ghost" size="sm"
+                  className="text-xs text-gray-400 rounded-xl mt-2">
+                  Compris
+                </Button>
+              </>
+            ) : (
+              <>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  Appuyez sur <strong>⋮</strong> puis <strong>Installer l'application</strong> ou <strong>Ajouter à l'écran d'accueil</strong>
                 </p>
                 <Button onClick={handleDismiss} variant="ghost" size="sm"
                   className="text-xs text-gray-400 rounded-xl mt-2">

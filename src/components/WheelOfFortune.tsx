@@ -34,6 +34,38 @@ const WheelOfFortune: React.FC<WheelOfFortuneProps> = ({ restaurants, officeAddr
     return items;
   }, [restaurants]);
 
+  // Spin history for smart suggestions
+  const historyKey = "kekonmange_spin_history";
+  const getHistory = (): string[] => {
+    try {
+      return JSON.parse(localStorage.getItem(historyKey) || "[]");
+    } catch { return []; }
+  };
+  const addToHistory = (id: string) => {
+    const history = getHistory();
+    const updated = [id, ...history.filter(h => h !== id)].slice(0, 10);
+    localStorage.setItem(historyKey, JSON.stringify(updated));
+  };
+
+  // Weighted random: recently picked restaurants have lower probability
+  const weightedPick = (): number => {
+    if (restaurants.length <= 1) return 0;
+    const history = getHistory();
+    const weights = restaurants.map((r) => {
+      const historyIndex = history.indexOf(r.id);
+      if (historyIndex === -1) return 1;
+      if (historyIndex < 3) return 0.1;  // 3 derniers: 10% de chance
+      return 0.4; // 4-10: 40% de chance
+    });
+    const totalWeight = weights.reduce((a, b) => a + b, 0);
+    let random = Math.random() * totalWeight;
+    for (let i = 0; i < weights.length; i++) {
+      random -= weights[i];
+      if (random <= 0) return i;
+    }
+    return weights.length - 1;
+  };
+
   const spinWheel = () => {
     if (restaurants.length === 0) {
       toast.error("Ajoutez au moins un restaurant pour lancer la machine");
@@ -44,7 +76,7 @@ const WheelOfFortune: React.FC<WheelOfFortuneProps> = ({ restaurants, officeAddr
     setSpinning(true);
     setWinner(null);
 
-    const selectedIndex = Math.floor(Math.random() * restaurants.length);
+    const selectedIndex = weightedPick();
     const selectedRestaurant = restaurants[selectedIndex];
 
     // Pick a target position far into the reel (not at the very end to leave margin)
@@ -65,6 +97,7 @@ const WheelOfFortune: React.FC<WheelOfFortuneProps> = ({ restaurants, officeAddr
 
     setTimeout(() => {
       setWinner(selectedRestaurant);
+      addToHistory(selectedRestaurant.id);
       setDialogOpen(true);
       setSpinning(false);
     }, SPIN_DURATION + 300);
@@ -165,6 +198,9 @@ const WheelOfFortune: React.FC<WheelOfFortuneProps> = ({ restaurants, officeAddr
                 <p className="text-xs font-semibold tracking-widest uppercase text-gray-400 mb-1">Vous mangez chez</p>
                 <h2 className="text-2xl font-extrabold text-gray-900">{winner.name}</h2>
                 <p className="text-sm text-gray-500 mt-1">{winner.foodType}</p>
+                {getHistory().indexOf(winner.id) > 0 && (
+                  <p className="text-xs text-amber-500 mt-1 font-medium">Ce restaurant a été tiré récemment</p>
+                )}
               </div>
 
               <div className="px-6 pb-6 space-y-3">

@@ -24,9 +24,11 @@ import { useInstance } from "@/contexts/InstanceContext";
 import InstanceSelector from "@/components/InstanceSelector";
 import NicknamePrompt from "@/components/NicknamePrompt";
 import { useNickname } from "@/hooks/use-nickname";
+import { useVotes } from "@/hooks/use-votes";
 
 const Index = () => {
   const { nickname, setNickname, hasNickname } = useNickname();
+  const { getVoteSummary, castVote } = useVotes(activeInstance?.id, nickname);
   const { activeInstance, loading: instanceLoading, updateInstanceName, switchInstance } = useInstance();
   
   const {
@@ -284,6 +286,8 @@ const Index = () => {
             onRemove={handleRemoveRestaurant}
             onEdit={handleEditRestaurant}
             onView={handleViewRestaurant}
+            getVoteSummary={getVoteSummary}
+            onVote={castVote}
             officeAddress={activeWorkplace?.address}
           />
         </section>

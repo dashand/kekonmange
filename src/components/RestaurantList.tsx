@@ -1,6 +1,7 @@
 
 import React from "react";
 import { Restaurant } from "@/types/restaurant";
+import type { VoteSummary } from "@/hooks/use-votes";
 import RestaurantCard from "@/components/RestaurantCard";
 
 interface RestaurantListProps {
@@ -9,6 +10,8 @@ interface RestaurantListProps {
   onEdit: (restaurant: Restaurant) => void;
   onView: (restaurant: Restaurant) => void;
   officeAddress?: string;
+  getVoteSummary?: (restaurantId: string) => VoteSummary;
+  onVote?: (restaurantId: string, vote: "up" | "down") => void;
 }
 
 const RestaurantList: React.FC<RestaurantListProps> = ({
@@ -17,6 +20,8 @@ const RestaurantList: React.FC<RestaurantListProps> = ({
   onEdit,
   onView,
   officeAddress,
+  getVoteSummary,
+  onVote,
 }) => {
   if (restaurants.length === 0) {
     return (
@@ -38,6 +43,8 @@ const RestaurantList: React.FC<RestaurantListProps> = ({
           onEdit={onEdit}
               onView={onView}
           officeAddress={officeAddress}
+          voteSummary={getVoteSummary ? getVoteSummary(restaurant.id) : undefined}
+          onVote={onVote}
         />
       ))}
     </div>

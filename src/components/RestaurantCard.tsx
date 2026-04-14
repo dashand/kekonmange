@@ -9,10 +9,11 @@ import {
   Trash2, MapPin, ShoppingBag, Leaf, Edit,
   ChevronLeft, ChevronRight, Flame, Phone,
   Moon, Euro, Ticket, CalendarCheck, BookOpen,
-  Gift, AlertCircle, CheckCircle2, UtensilsCrossed
+  Gift, AlertCircle, CheckCircle2, UtensilsCrossed, ThumbsUp, ThumbsDown
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import type { VoteSummary } from "@/hooks/use-votes";
 import OpeningHoursBadge from "@/components/OpeningHoursBadge";
 
 interface RestaurantCardProps {
@@ -20,6 +21,8 @@ interface RestaurantCardProps {
   onRemove: (id: string) => void;
   onEdit: (restaurant: Restaurant) => void;
   onView: (restaurant: Restaurant) => void;
+  voteSummary?: VoteSummary;
+  onVote?: (restaurantId: string, vote: "up" | "down") => void;
 }
 
 const CUISINE_META: Record<string, { emoji: string; color: string; bg: string }> = {
@@ -34,7 +37,7 @@ const CUISINE_META: Record<string, { emoji: string; color: string; bg: string }>
   "autre": { emoji: "🍽️", color: "text-gray-500", bg: "bg-gray-50" },
 };
 
-const RestaurantCard: React.FC<RestaurantCardProps> = ({ restaurant, onRemove, onEdit, onView }) => {
+const RestaurantCard: React.FC<RestaurantCardProps> = ({ restaurant, onRemove, onEdit, onView, voteSummary, onVote }) => {
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
   const hasPhotos = restaurant.menuPhotos && restaurant.menuPhotos.length > 0;
   const currentDay = getCurrentDay();
@@ -255,6 +258,34 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({ restaurant, onRemove, o
               <BookOpen className="h-3.5 w-3.5 text-gray-400 shrink-0 mt-0.5" />
               <span><span className="font-medium text-gray-600">Menu :</span> {restaurant.menuInfo}</span>
             </p>
+          </div>
+        )}
+
+        {/* Votes */}
+        {voteSummary && onVote && (
+          <div className="mt-3 flex items-center gap-2">
+            <button
+              onClick={(e) => { e.stopPropagation(); onVote(restaurant.id, "up"); }}
+              className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium transition-colors ${
+                voteSummary.userVote === "up"
+                  ? "bg-emerald-100 text-emerald-600"
+                  : "bg-gray-50 text-gray-400 hover:bg-emerald-50 hover:text-emerald-500"
+              }`}
+            >
+              <ThumbsUp className="h-3.5 w-3.5" />
+              {voteSummary.up > 0 && <span>{voteSummary.up}</span>}
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); onVote(restaurant.id, "down"); }}
+              className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium transition-colors ${
+                voteSummary.userVote === "down"
+                  ? "bg-red-100 text-red-600"
+                  : "bg-gray-50 text-gray-400 hover:bg-red-50 hover:text-red-500"
+              }`}
+            >
+              <ThumbsDown className="h-3.5 w-3.5" />
+              {voteSummary.down > 0 && <span>{voteSummary.down}</span>}
+            </button>
           </div>
         )}
 

@@ -102,6 +102,7 @@ const RestaurantEditDialog: React.FC<RestaurantEditDialogProps> = ({
   const [saved, setSaved] = useState(false);
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
   const hasChangesRef = useRef(false);
+  const isResettingRef = useRef(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -117,6 +118,7 @@ const RestaurantEditDialog: React.FC<RestaurantEditDialogProps> = ({
   // Reset form when restaurant changes
   useEffect(() => {
     if (restaurant) {
+      isResettingRef.current = true;
       form.reset({
         name: restaurant.name,
         foodType: restaurant.foodType,
@@ -135,6 +137,9 @@ const RestaurantEditDialog: React.FC<RestaurantEditDialogProps> = ({
         reservationUrl: restaurant.reservationUrl || "",
         spicyLevel: restaurant.spicyLevel || "none",
       });
+      // form.reset() fires form.watch() synchronously → triggerAutoSave() → schedules a timeout.
+      // Cancel it immediately to prevent a spurious save on SSE-induced resets.
+      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
       setMenuPhotos(restaurant.menuPhotos || []);
       setPromotions(restaurant.promotions || []);
       setOpeningHours(restaurant.openingHours || []);
@@ -203,7 +208,10 @@ const RestaurantEditDialog: React.FC<RestaurantEditDialogProps> = ({
 
   // Watch non-form state changes (photos, promotions, openingHours)
   useEffect(() => {
-    if (!restaurant) return;
+    if (!restaurant || isResettingRef.current) {
+      isResettingRef.current = false;
+      return;
+    }
     triggerAutoSave();
   }, [menuPhotos, promotions, openingHours, triggerAutoSave]);
 

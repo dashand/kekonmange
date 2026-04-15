@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import type { Restaurant, Workplace } from '@/types/restaurant';
 import {
   getWorkplaces, createWorkplace, updateWorkplace, deleteWorkplace as apiDeleteWorkplace,
@@ -11,6 +11,12 @@ export function usePocketBase(instanceId?: string, nickname?: string) {
   const [workplaces, setWorkplaces] = useState<Workplace[]>([]);
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Use a ref so the subscription callback always reads the current nickname
+  // without needing to be in the dependency array (which would recreate all
+  // subscriptions — and call unsubscribeAll() — every time nickname changes).
+  const nicknameRef = useRef(nickname);
+  nicknameRef.current = nickname;
 
   // Initial fetch
   useEffect(() => {
@@ -33,13 +39,13 @@ export function usePocketBase(instanceId?: string, nickname?: string) {
       setRestaurants(prev => {
         if (action === 'create') {
           if (prev.find(r => r.id === record.id)) return prev;
-          if (record.createdBy && record.createdBy !== nickname) {
+          if (record.createdBy && record.createdBy !== nicknameRef.current) {
             toast.info(record.createdBy + " a ajouté " + record.name);
           }
           return [...prev, record];
         }
         if (action === 'update') {
-          if (record.updatedBy && record.updatedBy !== nickname) {
+          if (record.updatedBy && record.updatedBy !== nicknameRef.current) {
             const existing = prev.find(r => r.id === record.id);
             if (existing && existing.name) {
               toast.info(record.updatedBy + " a modifié " + record.name);
@@ -66,7 +72,7 @@ export function usePocketBase(instanceId?: string, nickname?: string) {
     });
 
     return () => unsubscribeAll();
-  }, [instanceId, nickname]);
+  }, [instanceId]);
 
   // --- Workplace mutations ---
   const addWorkplace = async (wp: Omit<Workplace, 'id'>) => {

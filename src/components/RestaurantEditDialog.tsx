@@ -103,6 +103,7 @@ const RestaurantEditDialog: React.FC<RestaurantEditDialogProps> = ({
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
   const hasChangesRef = useRef(false);
   const isResettingRef = useRef(false);
+  const triggerAutoSaveRef = useRef<() => void>(() => {});
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -137,9 +138,7 @@ const RestaurantEditDialog: React.FC<RestaurantEditDialogProps> = ({
         reservationUrl: restaurant.reservationUrl || "",
         spicyLevel: restaurant.spicyLevel || "none",
       });
-      // form.reset() fires form.watch() synchronously → triggerAutoSave() → schedules a timeout.
-      // Cancel it immediately to prevent a spurious save on SSE-induced resets.
-      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+      // form.watch() callback checks isResettingRef and skips during reset.
       setMenuPhotos(restaurant.menuPhotos || []);
       setPromotions(restaurant.promotions || []);
       setOpeningHours(restaurant.openingHours || []);
@@ -179,6 +178,8 @@ const RestaurantEditDialog: React.FC<RestaurantEditDialogProps> = ({
     };
   }, [restaurant, form, menuPhotos, promotions, openingHours]);
 
+  // Always expose the latest triggerAutoSave via ref so it can be called
+  // from effects that intentionally omit it from their dependency array.
   // Auto-save with debounce
   const triggerAutoSave = useCallback(() => {
     hasChangesRef.current = true;
@@ -198,22 +199,31 @@ const RestaurantEditDialog: React.FC<RestaurantEditDialogProps> = ({
     }, 800);
   }, [buildUpdatedRestaurant, onSave]);
 
-  // Watch form changes
+  // Keep ref in sync so non-form state effect always calls the latest version
+  triggerAutoSaveRef.current = triggerAutoSave;
+
+  // Watch form changes — skip during reset (form.reset() fires this synchronously)
   useEffect(() => {
     const subscription = form.watch(() => {
+      if (isResettingRef.current) return;
       triggerAutoSave();
     });
     return () => subscription.unsubscribe();
   }, [form, triggerAutoSave]);
 
-  // Watch non-form state changes (photos, promotions, openingHours)
+  // Watch non-form state changes (photos, promotions, openingHours).
+  // triggerAutoSave is intentionally excluded from deps: it changes reference
+  // whenever `restaurant` changes (SSE), which would re-fire this effect and
+  // create an infinite save loop. The ref pattern gives us the latest version
+  // without making it a reactive dependency.
   useEffect(() => {
     if (!restaurant || isResettingRef.current) {
       isResettingRef.current = false;
       return;
     }
-    triggerAutoSave();
-  }, [menuPhotos, promotions, openingHours, triggerAutoSave]);
+    triggerAutoSaveRef.current();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [menuPhotos, promotions, openingHours]);
 
   // Save on dialog close if needed
   const handleOpenChange = (isOpen: boolean) => {

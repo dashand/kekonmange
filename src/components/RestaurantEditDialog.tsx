@@ -7,7 +7,7 @@ import {
   Promotion,
   OpeningHours
 } from "@/types/restaurant";
-import { Clock, Camera, Percent, UtensilsCrossed, ChevronDown, Loader2, Check } from "lucide-react";
+import { Clock, Camera, Percent, UtensilsCrossed, ChevronDown, Loader2, Check, BookOpen } from "lucide-react";
 import PhotoUploader from "@/components/PhotoUploader";
 import {
   Form,
@@ -26,12 +26,14 @@ import OpeningHoursEditor from "@/components/OpeningHoursEditor";
 import BasicInfoFields from "@/components/restaurant/BasicInfoFields";
 import OptionFields from "@/components/restaurant/OptionFields";
 import PromotionEditor from "@/components/restaurant/PromotionEditor";
+import MenuEditor from "@/components/restaurant/MenuEditor";
 
 interface RestaurantEditDialogProps {
   restaurant: Restaurant | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSave: (restaurant: Restaurant) => void;
+  instanceId?: string;
 }
 
 const formSchema = z.object({
@@ -91,6 +93,7 @@ const RestaurantEditDialog: React.FC<RestaurantEditDialogProps> = ({
   open,
   onOpenChange,
   onSave,
+  instanceId,
 }) => {
   const [menuPhotos, setMenuPhotos] = useState<string[]>([]);
   const [promotions, setPromotions] = useState<Promotion[]>([]);
@@ -298,6 +301,20 @@ const RestaurantEditDialog: React.FC<RestaurantEditDialogProps> = ({
                 badge={promotions.length > 0 ? `${promotions.length} promo${promotions.length > 1 ? 's' : ''}` : undefined}
               >
                 <PromotionEditor promotions={promotions} onChange={setPromotions} />
+              </CollapsibleSection>
+
+              <CollapsibleSection
+                title="Menu"
+                icon={<BookOpen className="h-4 w-4" />}
+                subtitle="Plats disponibles avec catégorie et prix"
+                badge={undefined}
+              >
+                {restaurant && (
+                  <MenuEditor
+                    restaurantId={restaurant.id}
+                    instanceId={instanceId}
+                  />
+                )}
               </CollapsibleSection>
 
               <CollapsibleSection

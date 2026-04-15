@@ -10,6 +10,7 @@ import {
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import GroupOrderDialog from "@/components/GroupOrderDialog";
+import MenuEditor from "@/components/restaurant/MenuEditor";
 import { ShoppingCart } from "lucide-react";
 import OsmMiniMap from "@/components/OsmMiniMap";
 import OpeningHoursBadge from "@/components/OpeningHoursBadge";
@@ -252,15 +253,17 @@ const RestaurantViewDialog: React.FC<RestaurantViewDialogProps> = ({
             </div>
           )}
 
-          {/* Menu info */}
-          {restaurant.menuInfo && (
-            <div className="p-3 rounded-xl bg-gray-50 border border-gray-100">
-              <p className="text-sm text-gray-600 inline-flex items-start gap-2">
-                <BookOpen className="h-4 w-4 text-gray-400 shrink-0 mt-0.5" />
-                <span><span className="font-medium text-gray-700">Menu :</span> {restaurant.menuInfo}</span>
-              </p>
-            </div>
-          )}
+          {/* Menu */}
+          <div className="p-3 rounded-xl bg-gray-50 border border-gray-100">
+            <p className="text-xs font-semibold text-gray-600 mb-2 inline-flex items-center gap-1.5">
+              <BookOpen className="h-3.5 w-3.5 text-gray-400" /> Menu
+            </p>
+            <MenuEditor
+              restaurantId={restaurant.id}
+              instanceId={instanceId}
+              readonly
+            />
+          </div>
 
           {/* Liens web */}
           {(restaurant.website || restaurant.reservationUrl) && (

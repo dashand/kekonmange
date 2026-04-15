@@ -1,17 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
 import PocketBase from "pocketbase";
 import { toast } from "sonner";
+import { useMenuItems } from "@/hooks/use-menu-items";
+
+export type { MenuItem } from "@/hooks/use-menu-items";
 
 const pb = new PocketBase(window.location.origin);
-
-export interface MenuItem {
-  id: string;
-  restaurant: string;
-  itemName: string;
-  price: number | null;
-  category: string;
-  instance?: string;
-}
 
 export interface GroupOrder {
   id: string;
@@ -36,33 +30,15 @@ export interface OrderItem {
 const today = () => new Date().toISOString().split("T")[0];
 
 export function useGroupOrder(restaurantId: string, instanceId?: string) {
-  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+  const { menuItems, addItem: addMenuItem, deleteItem: deleteMenuItem } = useMenuItems(restaurantId, instanceId);
+
   const [activeOrder, setActiveOrder] = useState<GroupOrder | null>(null);
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Load menu items for this restaurant
+  // Load today's order
   useEffect(() => {
-    const filter = "restaurant = '" + restaurantId + "'";
-    pb.collection("menu_items")
-      .getFullList({ filter, sort: "category,itemName" })
-      .then((records) => {
-        setMenuItems(
-          records.map((r: any) => ({
-            id: r.id,
-            restaurant: r.restaurant,
-            itemName: r.itemName,
-            price: r.price || null,
-            category: r.category || "",
-            instance: r.instance || undefined,
-          }))
-        );
-      })
-      .catch(console.error);
-  }, [restaurantId]);
-
-  // Load or find today's order
-  useEffect(() => {
+    if (!restaurantId) { setLoading(false); return; }
     const filter = "restaurant = '" + restaurantId + "' && orderDate = '" + today() + "'";
     pb.collection("group_orders")
       .getFullList({ filter })
@@ -77,7 +53,6 @@ export function useGroupOrder(restaurantId: string, instanceId?: string) {
             instance: r.instance || undefined,
           };
           setActiveOrder(order);
-          // Load order items
           return pb
             .collection("order_items")
             .getFullList({ filter: "groupOrder = '" + r.id + "'" })
@@ -135,7 +110,6 @@ export function useGroupOrder(restaurantId: string, instanceId?: string) {
     };
   }, [activeOrder?.id]);
 
-  // Start a new group order
   const startOrder = useCallback(async () => {
     try {
       const record = await pb.collection("group_orders").create({
@@ -160,47 +134,6 @@ export function useGroupOrder(restaurantId: string, instanceId?: string) {
     }
   }, [restaurantId, instanceId]);
 
-  // Add a menu item
-  const addMenuItem = useCallback(
-    async (itemName: string, price: number | null, category: string) => {
-      try {
-        const record = await pb.collection("menu_items").create({
-          restaurant: restaurantId,
-          itemName,
-          price,
-          category,
-          instance: instanceId || "",
-        });
-        const item: MenuItem = {
-          id: record.id,
-          restaurant: restaurantId,
-          itemName,
-          price,
-          category,
-          instance: instanceId || undefined,
-        };
-        setMenuItems((prev) => [...prev, item]);
-        return item;
-      } catch (err) {
-        console.error(err);
-        toast.error("Erreur lors de l'ajout du plat");
-      }
-    },
-    [restaurantId, instanceId]
-  );
-
-  // Delete a menu item
-  const deleteMenuItem = useCallback(async (id: string) => {
-    try {
-      await pb.collection("menu_items").delete(id);
-      setMenuItems((prev) => prev.filter((m) => m.id !== id));
-    } catch (err) {
-      console.error(err);
-      toast.error("Erreur lors de la suppression");
-    }
-  }, []);
-
-  // Add item to order
   const addOrderItem = useCallback(
     async (
       nickname: string,
@@ -229,7 +162,6 @@ export function useGroupOrder(restaurantId: string, instanceId?: string) {
     [activeOrder?.id, instanceId]
   );
 
-  // Remove order item
   const removeOrderItem = useCallback(async (id: string) => {
     try {
       await pb.collection("order_items").delete(id);
@@ -239,7 +171,6 @@ export function useGroupOrder(restaurantId: string, instanceId?: string) {
     }
   }, []);
 
-  // Toggle received
   const toggleReceived = useCallback(async (id: string, received: boolean) => {
     try {
       await pb.collection("order_items").update(id, { received });
@@ -248,13 +179,10 @@ export function useGroupOrder(restaurantId: string, instanceId?: string) {
     }
   }, []);
 
-  // Close order
   const closeOrder = useCallback(async () => {
     if (!activeOrder) return;
     try {
-      await pb.collection("group_orders").update(activeOrder.id, {
-        status: "closed",
-      });
+      await pb.collection("group_orders").update(activeOrder.id, { status: "closed" });
       setActiveOrder((prev) => (prev ? { ...prev, status: "closed" } : null));
       toast.success("Commande clôturée");
     } catch (err) {

@@ -449,6 +449,7 @@ const Index = () => {
           open={isEditDialogOpen}
           onOpenChange={setIsEditDialogOpen}
           onSave={handleSaveEditedRestaurant}
+          instanceId={activeInstance?.id}
         />
 
         {/* Footer */}

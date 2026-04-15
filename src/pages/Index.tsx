@@ -27,6 +27,8 @@ import NicknamePrompt from "@/components/NicknamePrompt";
 import { useNickname } from "@/hooks/use-nickname";
 import { useVotes } from "@/hooks/use-votes";
 import GroupOrderDialog from "@/components/GroupOrderDialog";
+import { useActiveGroupOrders } from "@/hooks/use-active-group-orders";
+import { ShoppingCart } from "lucide-react";
 
 const Index = () => {
   const { nickname, setNickname, hasNickname } = useNickname();
@@ -38,6 +40,7 @@ const Index = () => {
     addRestaurant, editRestaurant, removeRestaurant,
   } = usePocketBase(activeInstance?.id, nickname);
   const { getVoteSummary, castVote } = useVotes(activeInstance?.id, nickname);
+  const { activeOrders } = useActiveGroupOrders(activeInstance?.id);
 
   const activeWorkplace = workplaces.find(wp => wp.isActive) || null;
   
@@ -251,6 +254,38 @@ const Index = () => {
         onSwitchInstance={() => { localStorage.removeItem('kekonmange_active_instance'); window.location.reload(); }}
       />
         
+        {activeOrders.length > 0 && (
+          <div className="my-4 flex flex-col gap-2">
+            {activeOrders.map((order) => {
+              const restaurant = restaurants.find(r => r.id === order.restaurantId);
+              return (
+                <button
+                  key={order.id}
+                  onClick={() => {
+                    if (restaurant) handleGroupOrder(restaurant);
+                  }}
+                  className="w-full flex items-center justify-between gap-3 px-4 py-3 bg-emerald-50 border border-emerald-200 rounded-2xl hover:bg-emerald-100 transition-colors text-left"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="flex items-center justify-center h-8 w-8 rounded-xl bg-emerald-500 text-white shrink-0">
+                      <ShoppingCart className="h-4 w-4" />
+                    </span>
+                    <div>
+                      <p className="text-sm font-semibold text-emerald-800">
+                        Commande groupée en cours — {order.restaurantName}
+                      </p>
+                      <p className="text-xs text-emerald-600">
+                        {order.itemCount} article{order.itemCount !== 1 ? "s" : ""} commandé{order.itemCount !== 1 ? "s" : ""}
+                      </p>
+                    </div>
+                  </div>
+                  <span className="text-xs font-medium text-emerald-600 shrink-0">Rejoindre →</span>
+                </button>
+              );
+            })}
+          </div>
+        )}
+
         {showScrollButton && (
           <Button variant="secondary" size="icon"
             className="fixed bottom-6 right-6 z-50 rounded-xl shadow-md bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 animate-fade-in"

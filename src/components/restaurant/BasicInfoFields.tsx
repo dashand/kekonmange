@@ -240,26 +240,6 @@ const BasicInfoFields: React.FC<BasicInfoFieldsProps> = ({ form }) => {
         )}
       />
 
-      <FormField
-        control={form.control}
-        name="menuInfo"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Informations sur le menu</FormLabel>
-            <FormControl>
-              <Textarea 
-                placeholder="Ex: Menu du jour à 15€, plat signature: entrecôte..." 
-                className="min-h-24 resize-y"
-                {...field} 
-              />
-            </FormControl>
-            <FormDescription>
-              Détails sur les spécialités, prix, ou menus disponibles
-            </FormDescription>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
     </>
   );
 };

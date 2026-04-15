@@ -40,7 +40,7 @@ const formSchema = z.object({
   name: z.string().min(2, { message: "Le nom doit contenir au moins 2 caractères." }),
   foodType: z.string(),
   address: z.string().optional(),
-  menuInfo: z.string().optional(),
+
   takeaway: z.boolean().default(false),
   vegetarianOption: z.boolean().default(false),
   halalOption: z.boolean().default(false),
@@ -108,7 +108,7 @@ const RestaurantEditDialog: React.FC<RestaurantEditDialogProps> = ({
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: "", foodType: "français", address: "", menuInfo: "",
+      name: "", foodType: "français", address: "",
       takeaway: false, vegetarianOption: false, halalOption: false,
       distance: 500, restaurantTickets: "none", priceRange: "€",
       reservationType: "notAvailable", phoneOrderAllowed: false,
@@ -124,7 +124,7 @@ const RestaurantEditDialog: React.FC<RestaurantEditDialogProps> = ({
         name: restaurant.name,
         foodType: restaurant.foodType,
         address: restaurant.address || "",
-        menuInfo: restaurant.menuInfo || "",
+
         takeaway: restaurant.takeaway,
         vegetarianOption: restaurant.vegetarianOption,
         halalOption: restaurant.halalOption,
@@ -159,7 +159,7 @@ const RestaurantEditDialog: React.FC<RestaurantEditDialogProps> = ({
       name: values.name,
       foodType: values.foodType,
       address: values.address || undefined,
-      menuInfo: values.menuInfo || undefined,
+
       takeaway: values.takeaway,
       vegetarianOption: values.vegetarianOption,
       halalOption: values.halalOption,

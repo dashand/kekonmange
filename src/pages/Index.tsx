@@ -320,7 +320,7 @@ const Index = () => {
                 <option value="name">Nom</option>
                 <option value="distance">Distance</option>
                 <option value="price">Prix</option>
-                <option value="votes">Popularit\u00e9</option>
+                <option value="votes">Popularité</option>
               </select>
             </div>
           </div>

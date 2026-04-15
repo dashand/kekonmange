@@ -34,7 +34,7 @@ export function usePocketBase(instanceId?: string, nickname?: string) {
         if (action === 'create') {
           if (prev.find(r => r.id === record.id)) return prev;
           if (record.createdBy && record.createdBy !== nickname) {
-            toast.info(record.createdBy + " a ajout\u00e9 " + record.name);
+            toast.info(record.createdBy + " a ajouté " + record.name);
           }
           return [...prev, record];
         }
@@ -42,7 +42,7 @@ export function usePocketBase(instanceId?: string, nickname?: string) {
           if (record.updatedBy && record.updatedBy !== nickname) {
             const existing = prev.find(r => r.id === record.id);
             if (existing && existing.name) {
-              toast.info(record.updatedBy + " a modifi\u00e9 " + record.name);
+              toast.info(record.updatedBy + " a modifié " + record.name);
             }
           }
           return prev.map(r => r.id === record.id ? record : r);

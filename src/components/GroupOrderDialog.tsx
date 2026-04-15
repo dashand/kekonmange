@@ -20,7 +20,7 @@ interface GroupOrderDialogProps {
 }
 
 const CATEGORIES = [
-  { value: "entree", label: "Entr\u00e9e", icon: UtensilsCrossed },
+  { value: "entree", label: "Entrée", icon: UtensilsCrossed },
   { value: "plat", label: "Plat", icon: UtensilsCrossed },
   { value: "dessert", label: "Dessert", icon: Cake },
   { value: "boisson", label: "Boisson", icon: Coffee },
@@ -73,7 +73,7 @@ const GroupOrderDialog: React.FC<GroupOrderDialogProps> = ({
   const handleAddToOrder = async (item: MenuItem) => {
     if (!activeOrder) return;
     await addOrderItem(nickname, item.id, item.itemName, item.price, 1);
-    toast.success(item.itemName + " ajout\u00e9 \u00e0 ta commande");
+    toast.success(item.itemName + " ajouté à ta commande");
   };
 
   const handleAddCustomToOrder = async () => {
@@ -85,7 +85,7 @@ const GroupOrderDialog: React.FC<GroupOrderDialogProps> = ({
       customItemPrice ? parseFloat(customItemPrice) : null,
       1
     );
-    toast.success(customItemName.trim() + " ajout\u00e9");
+    toast.success(customItemName.trim() + " ajouté");
     setCustomItemName("");
     setCustomItemPrice("");
   };
@@ -112,16 +112,16 @@ const GroupOrderDialog: React.FC<GroupOrderDialogProps> = ({
       lines.push(person + " :");
       items.forEach((item) => {
         const name = item.customName || menuItems.find((m) => m.id === item.menuItem)?.itemName || "?";
-        const price = item.price ? " (" + item.price.toFixed(2) + "\u20ac)" : "";
+        const price = item.price ? " (" + item.price.toFixed(2) + "€)" : "";
         lines.push("  - " + (item.quantity > 1 ? item.quantity + "x " : "") + name + price);
       });
       const personTotal = items.reduce((s, i) => s + (i.price || 0) * i.quantity, 0);
-      if (personTotal > 0) lines.push("  Total: " + personTotal.toFixed(2) + "\u20ac");
+      if (personTotal > 0) lines.push("  Total: " + personTotal.toFixed(2) + "€");
       lines.push("");
     });
-    if (totalGeneral > 0) lines.push("TOTAL: " + totalGeneral.toFixed(2) + "\u20ac");
+    if (totalGeneral > 0) lines.push("TOTAL: " + totalGeneral.toFixed(2) + "€");
     navigator.clipboard.writeText(lines.join("\n"));
-    toast.success("Commande copi\u00e9e !");
+    toast.success("Commande copiée !");
   };
 
   const menuByCategory = useMemo(() => {
@@ -152,7 +152,7 @@ const GroupOrderDialog: React.FC<GroupOrderDialogProps> = ({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <ShoppingCart className="h-5 w-5 text-orange-500" />
-            Commande group\u00e9e \u2014 {restaurantName}
+            Commande groupée — {restaurantName}
           </DialogTitle>
         </DialogHeader>
 
@@ -164,7 +164,7 @@ const GroupOrderDialog: React.FC<GroupOrderDialogProps> = ({
               className="w-full bg-orange-500 hover:bg-orange-600 text-white py-5 rounded-xl"
             >
               <ShoppingCart className="h-4 w-4 mr-2" />
-              Lancer une commande group\u00e9e
+              Lancer une commande groupée
             </Button>
 
             {/* Menu management */}
@@ -198,7 +198,7 @@ const GroupOrderDialog: React.FC<GroupOrderDialogProps> = ({
                             <div className="flex items-center gap-2">
                               {item.price && (
                                 <span className="text-xs font-semibold text-gray-500">
-                                  {item.price.toFixed(2)}\u20ac
+                                  {item.price.toFixed(2)}€
                                 </span>
                               )}
                               <button
@@ -233,7 +233,7 @@ const GroupOrderDialog: React.FC<GroupOrderDialogProps> = ({
                         <Input
                           value={newItemPrice}
                           onChange={(e) => setNewItemPrice(e.target.value)}
-                          placeholder="Prix (\u20ac)"
+                          placeholder="Prix (€)"
                           type="number"
                           step="0.01"
                           className="text-sm w-24"
@@ -278,7 +278,7 @@ const GroupOrderDialog: React.FC<GroupOrderDialogProps> = ({
           <div className="space-y-4">
             {/* Status */}
             <div className={"px-3 py-2 rounded-xl text-xs font-medium text-center " + (activeOrder.status === "open" ? "bg-emerald-50 text-emerald-600" : "bg-gray-100 text-gray-500")}>
-              {activeOrder.status === "open" ? "Commande en cours" : "Commande cl\u00f4tur\u00e9e"} \u2014 {orderItems.length} article{orderItems.length !== 1 ? "s" : ""} \u2014 {Object.keys(orderByPerson).length} personne{Object.keys(orderByPerson).length !== 1 ? "s" : ""}
+              {activeOrder.status === "open" ? "Commande en cours" : "Commande clôturée"} — {orderItems.length} article{orderItems.length !== 1 ? "s" : ""} — {Object.keys(orderByPerson).length} personne{Object.keys(orderByPerson).length !== 1 ? "s" : ""}
             </div>
 
             {/* Toggle menu/summary */}
@@ -297,7 +297,7 @@ const GroupOrderDialog: React.FC<GroupOrderDialogProps> = ({
                 size="sm"
                 className={"flex-1 text-xs rounded-xl " + (showSummary ? "bg-orange-500 hover:bg-orange-600" : "")}
               >
-                <Users className="h-3.5 w-3.5 mr-1" /> Synth\u00e8se
+                <Users className="h-3.5 w-3.5 mr-1" /> Synthèse
               </Button>
             </div>
 
@@ -323,7 +323,7 @@ const GroupOrderDialog: React.FC<GroupOrderDialogProps> = ({
                               <div className="flex items-center gap-2">
                                 {item.price && (
                                   <span className="text-xs font-semibold text-gray-400">
-                                    {item.price.toFixed(2)}\u20ac
+                                    {item.price.toFixed(2)}€
                                   </span>
                                 )}
                                 <Plus className="h-4 w-4 text-orange-400" />
@@ -376,7 +376,7 @@ const GroupOrderDialog: React.FC<GroupOrderDialogProps> = ({
                               {name}
                             </span>
                             <div className="flex items-center gap-2">
-                              {item.price ? <span className="text-xs text-gray-400">{(item.price * item.quantity).toFixed(2)}\u20ac</span> : null}
+                              {item.price ? <span className="text-xs text-gray-400">{(item.price * item.quantity).toFixed(2)}€</span> : null}
                               <button onClick={() => removeOrderItem(item.id)} className="text-gray-300 hover:text-red-500">
                                 <X className="h-3.5 w-3.5" />
                               </button>
@@ -399,7 +399,7 @@ const GroupOrderDialog: React.FC<GroupOrderDialogProps> = ({
                       <div className="flex items-center justify-between mb-2">
                         <p className="font-semibold text-sm text-gray-800">{person}</p>
                         {personTotal > 0 && (
-                          <span className="text-xs font-semibold text-orange-500">{personTotal.toFixed(2)}\u20ac</span>
+                          <span className="text-xs font-semibold text-orange-500">{personTotal.toFixed(2)}€</span>
                         )}
                       </div>
                       {items.map((item) => {
@@ -421,7 +421,7 @@ const GroupOrderDialog: React.FC<GroupOrderDialogProps> = ({
                               {name}
                             </span>
                             {item.price ? (
-                              <span className="text-xs text-gray-400">{(item.price * item.quantity).toFixed(2)}\u20ac</span>
+                              <span className="text-xs text-gray-400">{(item.price * item.quantity).toFixed(2)}€</span>
                             ) : null}
                           </div>
                         );
@@ -438,7 +438,7 @@ const GroupOrderDialog: React.FC<GroupOrderDialogProps> = ({
                 {totalGeneral > 0 && (
                   <div className="flex items-center justify-between px-3 py-2 bg-orange-50 rounded-xl">
                     <span className="font-bold text-sm text-gray-800">Total</span>
-                    <span className="font-bold text-sm text-orange-600">{totalGeneral.toFixed(2)}\u20ac</span>
+                    <span className="font-bold text-sm text-orange-600">{totalGeneral.toFixed(2)}€</span>
                   </div>
                 )}
 
@@ -449,14 +449,14 @@ const GroupOrderDialog: React.FC<GroupOrderDialogProps> = ({
                   </Button>
                   {activeOrder.status === "open" && (
                     <Button onClick={closeOrder} variant="outline" size="sm" className="flex-1 text-xs rounded-xl text-red-500 hover:text-red-600">
-                      <Check className="h-3.5 w-3.5 mr-1" /> Cl\u00f4turer
+                      <Check className="h-3.5 w-3.5 mr-1" /> Clôturer
                     </Button>
                   )}
                 </div>
 
                 {allReceived && orderItems.length > 0 && (
                   <p className="text-center text-sm text-emerald-500 font-semibold">
-                    Toutes les commandes ont \u00e9t\u00e9 r\u00e9ceptionn\u00e9es !
+                    Toutes les commandes ont été réceptionnées !
                   </p>
                 )}
               </div>

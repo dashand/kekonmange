@@ -20,7 +20,7 @@ export default defineConfig(({ mode }) => ({
       manifest: {
         name: "KekonMange",
         short_name: "KekonMange",
-        description: "Partagez les bonnes adresses entre coll\u00e8gues pour manger \u00e0 midi",
+        description: "Partagez les bonnes adresses entre collègues pour manger à midi",
         theme_color: "#F97316",
         background_color: "#ffffff",
         display: "standalone",

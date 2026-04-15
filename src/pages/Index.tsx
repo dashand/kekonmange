@@ -26,6 +26,7 @@ import InstallPrompt from "@/components/InstallPrompt";
 import NicknamePrompt from "@/components/NicknamePrompt";
 import { useNickname } from "@/hooks/use-nickname";
 import { useVotes } from "@/hooks/use-votes";
+import GroupOrderDialog from "@/components/GroupOrderDialog";
 
 const Index = () => {
   const { nickname, setNickname, hasNickname } = useNickname();
@@ -81,6 +82,8 @@ const Index = () => {
   const [editingRestaurant, setEditingRestaurant] = useState<Restaurant | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isAddFormOpen, setIsAddFormOpen] = useState(false);
+  const [groupOrderRestaurant, setGroupOrderRestaurant] = useState<Restaurant | null>(null);
+  const [isGroupOrderOpen, setIsGroupOrderOpen] = useState(false);
   
   const activeWorkplaceRestaurants = activeWorkplace 
     ? restaurants.filter(r => r.workplaceId === activeWorkplace.id)
@@ -160,6 +163,11 @@ const Index = () => {
   const handleViewRestaurant = (restaurant: Restaurant) => {
     setViewingRestaurant(restaurant);
     setIsViewDialogOpen(true);
+  };
+
+  const handleGroupOrder = (restaurant: Restaurant) => {
+    setGroupOrderRestaurant(restaurant);
+    setIsGroupOrderOpen(true);
   };
 
   const handleEditRestaurant = (restaurant: Restaurant) => {
@@ -324,6 +332,7 @@ const Index = () => {
             getVoteSummary={getVoteSummary}
             onVote={castVote}
             officeAddress={activeWorkplace?.address}
+            onGroupOrder={handleGroupOrder}
           />
         </section>
 
@@ -387,6 +396,15 @@ const Index = () => {
           onOpenChange={setIsViewDialogOpen}
           onEdit={handleEditRestaurant}
           officeAddress={activeWorkplace?.address}
+          instanceId={activeInstance?.id}
+          nickname={nickname}
+        />
+
+        <GroupOrderDialog
+          open={isGroupOrderOpen}
+          onOpenChange={setIsGroupOrderOpen}
+          restaurantId={groupOrderRestaurant?.id || ""}
+          restaurantName={groupOrderRestaurant?.name || ""}
           instanceId={activeInstance?.id}
           nickname={nickname}
         />

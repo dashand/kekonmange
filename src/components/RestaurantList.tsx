@@ -12,6 +12,7 @@ interface RestaurantListProps {
   officeAddress?: string;
   getVoteSummary?: (restaurantId: string) => VoteSummary;
   onVote?: (restaurantId: string, vote: "up" | "down") => void;
+  onGroupOrder?: (restaurant: Restaurant) => void;
 }
 
 const RestaurantList: React.FC<RestaurantListProps> = ({
@@ -22,6 +23,7 @@ const RestaurantList: React.FC<RestaurantListProps> = ({
   officeAddress,
   getVoteSummary,
   onVote,
+  onGroupOrder,
 }) => {
   if (restaurants.length === 0) {
     return (
@@ -45,6 +47,7 @@ const RestaurantList: React.FC<RestaurantListProps> = ({
           officeAddress={officeAddress}
           voteSummary={getVoteSummary ? getVoteSummary(restaurant.id) : undefined}
           onVote={onVote}
+          onGroupOrder={onGroupOrder}
         />
       ))}
     </div>

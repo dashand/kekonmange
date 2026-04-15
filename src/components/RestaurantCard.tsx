@@ -9,7 +9,7 @@ import {
   Trash2, MapPin, ShoppingBag, Leaf, Edit,
   ChevronLeft, ChevronRight, Flame, Phone,
   Moon, Euro, Ticket, CalendarCheck, BookOpen,
-  Gift, AlertCircle, CheckCircle2, UtensilsCrossed, ThumbsUp, ThumbsDown
+  Gift, AlertCircle, CheckCircle2, UtensilsCrossed, ThumbsUp, ThumbsDown, ShoppingCart
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -23,6 +23,7 @@ interface RestaurantCardProps {
   onView: (restaurant: Restaurant) => void;
   voteSummary?: VoteSummary;
   onVote?: (restaurantId: string, vote: "up" | "down") => void;
+  onGroupOrder?: (restaurant: Restaurant) => void;
 }
 
 const CUISINE_META: Record<string, { emoji: string; color: string; bg: string }> = {
@@ -37,7 +38,7 @@ const CUISINE_META: Record<string, { emoji: string; color: string; bg: string }>
   "autre": { emoji: "🍽️", color: "text-gray-500", bg: "bg-gray-50" },
 };
 
-const RestaurantCard: React.FC<RestaurantCardProps> = ({ restaurant, onRemove, onEdit, onView, voteSummary, onVote }) => {
+const RestaurantCard: React.FC<RestaurantCardProps> = ({ restaurant, onRemove, onEdit, onView, voteSummary, onVote, onGroupOrder }) => {
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
   const hasPhotos = restaurant.menuPhotos && restaurant.menuPhotos.length > 0;
   const currentDay = getCurrentDay();
@@ -135,6 +136,14 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({ restaurant, onRemove, o
             </div>
           </div>
           <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+            {onGroupOrder && (
+              <Button variant="ghost" size="icon"
+                className="h-8 w-8 rounded-lg text-gray-300 hover:text-emerald-500 hover:bg-emerald-50"
+                onClick={(e) => { e.stopPropagation(); onGroupOrder(restaurant); }}
+                title="Commande groupée">
+                <ShoppingCart className="h-3.5 w-3.5" />
+              </Button>
+            )}
             <Button variant="ghost" size="icon"
               className="h-8 w-8 rounded-lg text-gray-300 hover:text-gray-600 hover:bg-gray-50"
               onClick={(e) => { e.stopPropagation(); onEdit(restaurant); }}>
